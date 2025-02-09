@@ -26,6 +26,8 @@ namespace evoWatch.Database.Models
         [MaxLength(50, ErrorMessage = "Award cannot be longer than 50 characters.")]
         public  string Award { get; set; }
 
+        public string? VideoPath { get; set; }
+
         public virtual Season Season { get; set; }
 
         public virtual ProductionCompany ProductionCompany { get; set; }
