@@ -9,5 +9,6 @@ namespace evoWatch.Database.Repositories
         Task<Series> UpdateSeriesAsync(Series series);
         Task<Series?> GetSeriesByIdAsync(Guid id);  
         Task<bool> DeleteSeriesAsync(Series series);
+        Task<Series> AddCompleteSeriesAsync(Series series, List<Season> seasons, Dictionary<Guid, List<Episode>> episodesBySeason);
     }
 }
