@@ -124,5 +124,24 @@ namespace evoWatch.Controllers
                 return Problem($"Series with specified ID: {id} not found", null, StatusCodes.Status404NotFound);
             }
         }
+
+        [HttpPost("addcompleteseries")]
+        public async Task<IActionResult> AddCompleteSeries([FromForm]  CompleteSeriesDTO completeSeriesDto,  IFormFile? videoFile)
+        {
+            try
+            {
+                var result = await _seriesService.AddCompleteSeriesAsync(
+                    completeSeriesDto.SeriesDto,
+                    completeSeriesDto.SeasonDto,
+                    completeSeriesDto.EpisodeDto,videoFile);
+
+                return CreatedAtAction(nameof(GetSeriesById), new { id = result.Id }, result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
     }
 }

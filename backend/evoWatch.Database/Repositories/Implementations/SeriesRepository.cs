@@ -49,5 +49,44 @@ namespace evoWatch.Database.Repositories.Implementations
             await _databaseContext.SaveChangesAsync();
             return result.Entity;          
         }
+
+        public async Task<Series> AddCompleteSeriesAsync(Series series, List<Season> seasons, Dictionary<Guid, List<Episode>> episodesBySeason)
+        {
+            using var transaction = await _databaseContext.Database.BeginTransactionAsync();
+
+            try
+            {
+                // Series mentése
+                await _databaseContext.Series.AddAsync(series);
+                await _databaseContext.SaveChangesAsync();
+
+                foreach (var season in seasons)
+                {
+                    season.Series = series; // Beállítjuk a sorozathoz
+                    await _databaseContext.Seasons.AddAsync(season);
+                    await _databaseContext.SaveChangesAsync();
+
+                    if (episodesBySeason.TryGetValue(season.Id, out var episodes))
+                    {
+                        foreach (var episode in episodes)
+                        {
+                            episode.Season = season; // Beállítjuk a szezonhoz
+                            await _databaseContext.MoviesAndEpisodes.AddAsync(episode);
+                        }
+                    }
+                }
+
+                await _databaseContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return series;
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
     }
 }

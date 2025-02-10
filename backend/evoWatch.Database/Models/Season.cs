@@ -9,6 +9,9 @@ namespace evoWatch.Database.Models
         public Guid Id { get; set; }
 
         [Required]
+        public int SeasonNumber { get; set; }
+
+        [Required]
         public required int ReleaseYear { get; set; }
 
         [NotMapped]
