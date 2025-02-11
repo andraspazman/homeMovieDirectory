@@ -28,6 +28,10 @@ namespace evoWatch.Database.Models
 
         public string? VideoPath { get; set; }
 
+        public string? CoverImagePath { get; set; }
+
+        public bool IsMovie { get; set; }
+
         public virtual Season Season { get; set; }
 
         public virtual ProductionCompany ProductionCompany { get; set; }

@@ -9,13 +9,16 @@ using Microsoft.OpenApi.Models;
 using System.Reflection;
 using evoWatch.Database.Repositories;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.Extensions.FileProviders;
 
 var exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 Directory.SetCurrentDirectory(exeDir);
 
-var builder = WebApplication.CreateBuilder(args);
-
-
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    WebRootPath = "uploads" 
+});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -52,16 +55,15 @@ builder.Services.AddSwaggerGen(c => {
 
 builder.Services.Configure<FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 100000000; // 100MB
+    options.MultipartBodyLengthLimit = 100000000; 
 });
 
-// Konfiguráció beolvasása az appsettings.json-ból
+
 var config = builder.Configuration;
 var videoUploadPath = config["FileStorage:VideoUploadPath"];
 
 var key = Encoding.UTF8.GetBytes(config["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is missing"));
 
-// JWT autentikáció beállítása
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -77,10 +79,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Dependency Injection
+
+
 builder.Services.AddEvoWatch();
 builder.Services.AddEvoWatchDatabase();
-builder.Services.AddJwtAuthentication(config); // JWT szolgáltatásokat ad hozzá
+builder.Services.AddJwtAuthentication(config);
 
 var app = builder.Build();
 
@@ -93,18 +96,23 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors(options =>
 {
-    options.WithOrigins("https://localhost:4200")  // A frontend URL-je
-           .AllowAnyHeader()  // Minden fejléc engedélyezése
-           .AllowAnyMethod()  // Minden HTTP módszer engedélyezése
-           .AllowCredentials();  // Engedélyezi a cookie-k küldését
+    options.WithOrigins("https://localhost:4200")
+           .AllowAnyHeader()
+           .AllowAnyMethod()  
+           .AllowCredentials();  
 });
 
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication();  // JWT autentikáció middleware
-app.UseAuthorization();  // Engedélyezés middleware
+app.UseAuthentication();
+app.UseAuthorization(); 
 
 app.MapControllers();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(@"D:\CoverImages"),
+    RequestPath = "/images"
+});
 
 app.Run();

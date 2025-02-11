@@ -6,5 +6,7 @@
         Task WriteAsync(string filename, Stream stream);
         void Initialize(string basePath);
         void Delete(string filename);
+        Task<string?> SaveFileAsync(IFormFile file);
+
     }
 }

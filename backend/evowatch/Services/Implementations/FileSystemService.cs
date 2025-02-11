@@ -1,8 +1,11 @@
-﻿namespace evoWatch.Services
+﻿namespace evoWatch.Services.Implementations
 {
     internal class FileSystemService : IFileSystemService
     {
         protected string? _basePath;
+
+        private readonly string _externalFolderPath = @"D:\CoverImages";
+        private readonly string[] _permittedExtensions = { ".jpg", ".jpeg", ".png" };
 
         public void Initialize(string basePath)
         {
@@ -16,7 +19,7 @@
 
         public FileStream Read(string filename)
         {
-            if(_basePath is null)
+            if (_basePath is null)
             {
                 throw new InvalidOperationException("FileSystemService has not been initialized.");
             }
@@ -37,10 +40,10 @@
                 throw new InvalidOperationException("FileSystemService has not been initialized.");
             }
 
-            
+
             string filepath = Path.Combine(_basePath, filename);
 
-            using ( var fileStream = new FileStream(filepath, FileMode.Create, FileAccess.Write))
+            using (var fileStream = new FileStream(filepath, FileMode.Create, FileAccess.Write))
             {
                 await stream.CopyToAsync(fileStream);
             }
@@ -60,6 +63,40 @@
             }
 
             File.Delete(filepath);
+        }
+
+        //For series and movies covers
+        public async Task<string?> SaveFileAsync(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return null;
+            }
+
+            // Fájlkiterjesztés ellenőrzése
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (string.IsNullOrEmpty(extension) || !_permittedExtensions.Contains(extension))
+            {
+                throw new Exception("Only PNG or JPG permitted.");
+            }
+
+            // Ellenőrizzük, hogy a célmappa létezik-e, ha nem, létrehozzuk
+            if (!Directory.Exists(_externalFolderPath))
+            {
+                Directory.CreateDirectory(_externalFolderPath);
+            }
+
+            // Egyedi fájlnév generálása
+            var fileName = Guid.NewGuid().ToString() + extension;
+            var filePath = Path.Combine(_externalFolderPath, fileName);
+
+            // Fájl mentése
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            return fileName; // Visszaadjuk a mentett fájl nevét
         }
     }
 }

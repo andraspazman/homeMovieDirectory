@@ -24,6 +24,7 @@ namespace evoWatch.Database.Models
 
         [MaxLength(1000, ErrorMessage = "Description cannot be longer than 1000 characters.")]
         public string Description { get; set; }
+        public string? CoverImagePath { get; set; }
 
         [NotMapped]
         public int SeasonsCount => Seasons?.Count() ?? 0;

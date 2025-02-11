@@ -1,5 +1,5 @@
 export interface Series{
-    image: string;
+    coverImagePath: string;
     id:string;
     title: string;
     genre: string;

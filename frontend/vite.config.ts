@@ -11,6 +11,6 @@ export default defineConfig({
       cert: fs.readFileSync('localhost.pem'),
     },
     host: 'localhost',
-    port: 4200, // vagy amit használsz
+    port: 4200,
   },
 });

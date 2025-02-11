@@ -1,6 +1,7 @@
 ﻿using evoWatch.DTOs;
 using evoWatch.Exceptions;
 using evoWatch.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Mime;
 
@@ -8,7 +9,6 @@ namespace evoWatch.Controllers
 {
     [ApiController]
     [Route("series")]
-
     public class SeriesController : ControllerBase
     {
         private readonly ISeriesService _seriesService;
@@ -21,7 +21,6 @@ namespace evoWatch.Controllers
         /// <summary>
         ///  List of all series.
         /// </summary>
-        /// <response code="200">The list of series was successfully listed.</response>
         [HttpGet(Name = nameof(GetSeries))]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(IEnumerable<SeriesDTO>), StatusCodes.Status200OK)]
@@ -34,9 +33,6 @@ namespace evoWatch.Controllers
         /// <summary>
         /// List a series by id.
         /// </summary>
-        /// <param name="id">The unique identifier of the series.</param>
-        /// <response code="200">The series was successfully retrieved.</response>
-        /// <response code="404">The series was not found.</response>
         [HttpGet("{id:guid}", Name = nameof(GetSeriesById))]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(SeriesDTO), StatusCodes.Status200OK)]
@@ -55,26 +51,22 @@ namespace evoWatch.Controllers
         }
 
         /// <summary>
-        /// Adds a new series.
+        /// Adds a new series with an optional cover image.
         /// </summary>
         /// <param name="series">The series data to add.</param>
-        /// <response code="200">The series was successfully added.</response>
+        /// <param name="coverImage">The cover image file (optional).</param>
         [HttpPost(Name = nameof(AddSeries))]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(SeriesDTO), StatusCodes.Status200OK)]
-        public async Task<IActionResult> AddSeries([FromBody] SeriesDTO series)
+        public async Task<IActionResult> AddSeries([FromForm] SeriesDTO series, IFormFile? coverImage)
         {
-            var result = await _seriesService.AddSeriesAsync(series);
+            var result = await _seriesService.AddSeriesAsync(series, coverImage);
             return Ok(result);
         }
 
         /// <summary>
-        /// Updates an existing series id.
+        /// Updates an existing series.
         /// </summary>
-        /// <param name="id">The unique identifier of the series to update.</param>
-        /// <param name="series">The updated series data.</param>
-        /// <response code="200">The series was successfully updated.</response>
-        /// <response code="404">The series was not found.</response>
         [HttpPut("{id:guid}", Name = nameof(UpdateSeries))]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(SeriesDTO), StatusCodes.Status200OK)]
@@ -93,12 +85,8 @@ namespace evoWatch.Controllers
         }
 
         /// <summary>
-        /// Deletes a series id.
+        /// Deletes a series.
         /// </summary>
-        /// <param name="id">The unique identifier of the series to delete.</param>
-        /// <response code="200">The series was successfully deleted.</response>
-        /// <response code="404">The series was not found.</response>
-        /// <response code="500">Failed to delete the series.</response>
         [HttpDelete("{id:guid}", Name = nameof(DeleteSeriesAsync))]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -109,7 +97,6 @@ namespace evoWatch.Controllers
             try
             {
                 var result = await _seriesService.DeleteSeriesAsync(id);
-
                 if (!result)
                 {
                     return Problem("Failed to delete", null, StatusCodes.Status500InternalServerError);
@@ -124,24 +111,5 @@ namespace evoWatch.Controllers
                 return Problem($"Series with specified ID: {id} not found", null, StatusCodes.Status404NotFound);
             }
         }
-
-        [HttpPost("addcompleteseries")]
-        public async Task<IActionResult> AddCompleteSeries([FromForm]  CompleteSeriesDTO completeSeriesDto,  IFormFile? videoFile)
-        {
-            try
-            {
-                var result = await _seriesService.AddCompleteSeriesAsync(
-                    completeSeriesDto.SeriesDto,
-                    completeSeriesDto.SeasonDto,
-                    completeSeriesDto.EpisodeDto,videoFile);
-
-                return CreatedAtAction(nameof(GetSeriesById), new { id = result.Id }, result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
-
     }
 }

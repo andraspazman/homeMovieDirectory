@@ -21,4 +21,8 @@
     <ProjectReference Include="..\evoWatch.Database\evoWatch.Database.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\uploads\" />
+  </ItemGroup>
+
 </Project>
