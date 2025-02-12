@@ -12,8 +12,6 @@ namespace evoWatch.DTOs
         public string Description { get; set; } 
         public string? CoverImagePath {  get; set; }      
         
-       
-
         public static SeriesDTO CreateFromSeriesDocument(Series series)
         {
             return new SeriesDTO
@@ -23,7 +21,7 @@ namespace evoWatch.DTOs
                 Genre = series.Genre,
                 ReleaseYear = series.ReleaseYear,
                 FinalYear = series.FinalYear,
-                Description = series.Description,
+                Description = series.Description ,
                 CoverImagePath = series.CoverImagePath
             };
         }

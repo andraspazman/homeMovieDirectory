@@ -12,6 +12,8 @@ namespace evoWatch.DTOs
         public string Language { get; set; }
         public string Award { get; set; }    
         public string? VideoPath { get; set; }
+        public string? CoverImagePath { get; set; }
+        public bool IsMovie { get; set; }
         public Guid SeasonId { get; set; }
 
         public static EpisodeDTO CreateFromEpisodeDocument(Episode episode)
@@ -26,6 +28,8 @@ namespace evoWatch.DTOs
                 Language = episode.Language,
                 Award = episode.Award,
                 VideoPath = episode.VideoPath,
+                CoverImagePath = episode.CoverImagePath,
+                IsMovie = episode.IsMovie,
                 SeasonId = episode.Season.Id, // Feltételezzük, hogy Season nem null
             };
         }
