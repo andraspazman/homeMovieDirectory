@@ -1,0 +1,74 @@
+.navBar {
+  width: 100%;
+  background-color: #18181b; /* Sötét háttér */
+  color: #fff;
+  padding: 0.5rem 1rem;
+}
+
+.navBarFlex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+
+.leftSection {
+  display: flex;
+  align-items: center;
+  color: "red"
+}
+
+/* Jobb oldali rész (user ikon + menü) */
+.rightSection {
+  display: flex;
+  align-items: center;
+}
+
+.searchBox{
+  flex: 1;
+  align-items: center;
+}
+
+.centerSection {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding-left: 20%;
+  padding-right: 20%;
+
+}
+
+/* Keresőmező input: 20% szélesség, vékony körvonal */
+.searchInput {
+  width: 20%;
+  border: 1px solid #ccc;
+  background-color: #2D3748;
+  color: #fff;
+  //padding: 0.1rem 0.6rem;
+  
+
+  &:focus {
+    outline: none;
+    border-color: #aaa;
+  }
+}
+
+.myMenuItem {
+
+  color: #2D3748;
+
+  &:hover {
+    background-color: #4A5568; /* pl. gray.600 */
+  }
+
+
+  &:focus {
+    background-color: #4A5568;
+  }
+
+
+  &:active {
+    background-color: #718096; /* pl. gray.500 */
+  }
+}

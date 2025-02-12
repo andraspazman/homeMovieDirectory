@@ -1,23 +1,25 @@
+import React, { useState, useEffect } from "react";
 import { Flex, Box } from "@chakra-ui/react";
-import { useState, useEffect } from "react";
 import axios from "axios";
 import { BASE_URL } from "./constant";
-import { Series } from "./types/series";
+/*
 import TopBar from "./components/TopBar";
 import SideNav from "./components/SideNavigation";
 import SeriesGrid from "./components/SeriesGrid";
+*/
 import AuthPage from "./pages/AuthPage";
+import NavBar from "./components/Navbar/Navbar";
 
 function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Kezdő állapot: nyitva
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
 
   useEffect(() => {
     checkAuth();
   }, []);
 
-  // Sidebar állapotának váltása
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
   };
@@ -32,7 +34,6 @@ function App() {
   };
 
   const signOut = () => {
-    // Itt megírhatod a kijelentkezést (pl. cookie törlés)
     setIsAuthenticated(false);
   };
 
@@ -44,7 +45,7 @@ function App() {
     setIsLoading(true);
     axios.get(`${BASE_URL}series`)
       .then((response) => {
-        // Itt nem kell a data prop, a SeriesGrid az adatokat magától szerzi be.
+        // A SeriesGrid saját maga szerzi be az adatokat.
       })
       .catch(console.error)
       .finally(() => setIsLoading(false));
@@ -54,15 +55,24 @@ function App() {
 
   return (
     <Flex>
-      {/* Sidebar feltételes megjelenítése */}
-      {isSidebarOpen && <SideNav />}
-      {/* Tartalom doboz - ha a sidebar nyitva van, toljuk arrébb */}
-      <Box flex="1" ml={isSidebarOpen ? "250px" : "0"}>
-        <TopBar onToggleSidebar={toggleSidebar} isAuthenticated={isAuthenticated} onSignOut={signOut} />
-        {/* Ide jön a fő tartalom */}
-        <SeriesGrid isLoading={isLoading} isAuthenticated={isAuthenticated} />
+      
+    
+      
+      <Box flex="1" ml={isSidebarOpen ? "0px" : "0"}>
+      <NavBar userName={""} onSettingsClick={function (): void {
+        throw new Error("Function not implemented.");
+      } } onEditProfileClick={function (): void {
+        throw new Error("Function not implemented.");
+      } } onFavouritesClick={function (): void {
+        throw new Error("Function not implemented.");
+      } } onLogoutClick={function (): void {
+        throw new Error("Function not implemented.");
+      } }></NavBar>
       </Box>
     </Flex>
+    /*
+      {isSidebarOpen && <SideNav />}
+    */
   );
 }
 

@@ -3,13 +3,15 @@ import { HamburgerIcon } from "@chakra-ui/icons";
 import { useState } from "react";
 import styles from "../styles/TopBar.module.css"
 
+// Kibővített interfész, amely tartalmazza az onShowAddSeries callback-et is
 interface TopBarProps {
   onToggleSidebar: () => void;
   isAuthenticated: boolean;
   onSignOut: () => void;
+  onShowAddSeries: () => void;
 }
 
-export default function TopBar({ onToggleSidebar, isAuthenticated, onSignOut }: TopBarProps) {
+export default function TopBar({ onToggleSidebar, isAuthenticated, onSignOut, onShowAddSeries }: TopBarProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
@@ -39,8 +41,11 @@ export default function TopBar({ onToggleSidebar, isAuthenticated, onSignOut }: 
         />
       </div>
 
-      {/* Jobb oldali rész - Felhasználói ikon és gomb */}
+      {/* Jobb oldali rész - "Add Series" gomb, felhasználói ikon és be-/kilépés */}
       <div className={styles.rightSection}>
+        <Button colorScheme="blue" onClick={onShowAddSeries} mr={3}>
+          Add Series
+        </Button>
         {isAuthenticated && (
           <Avatar size="sm" mr={3} />
         )}
