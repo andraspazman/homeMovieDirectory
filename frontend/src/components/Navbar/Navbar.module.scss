@@ -1,8 +1,11 @@
 .navBar {
+  position: fixed;
   width: 100%;
-  background-color: #18181b; /* Sötét háttér */
+  background-color: #18181b; 
   color: #fff;
   padding: 0.5rem 1rem;
+  position: fixed;
+  
 }
 
 .navBarFlex {
@@ -19,7 +22,7 @@
   color: "red"
 }
 
-/* Jobb oldali rész (user ikon + menü) */
+
 .rightSection {
   display: flex;
   align-items: center;
@@ -39,14 +42,12 @@
 
 }
 
-/* Keresőmező input: 20% szélesség, vékony körvonal */
 .searchInput {
   width: 20%;
   border: 1px solid #ccc;
   background-color: #2D3748;
   color: #fff;
-  //padding: 0.1rem 0.6rem;
-  
+
 
   &:focus {
     outline: none;
@@ -58,17 +59,33 @@
 
   color: #2D3748;
 
+
   &:hover {
     background-color: #4A5568; /* pl. gray.600 */
   }
-
 
   &:focus {
     background-color: #4A5568;
   }
 
-
   &:active {
     background-color: #718096; /* pl. gray.500 */
   }
+}
+
+.loginButton{
+  color: rgb(128, 66, 66);
+  padding-top: 0%;
+  margin-right: 10%;
+  border: none;
+
+  &:focus {
+    outline: none;
+    border-color: #962020;
+  }
+   
+  &:hover{
+    color: rgb(223, 38, 38); 
+  }
+
 }

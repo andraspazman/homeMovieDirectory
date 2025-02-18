@@ -1,0 +1,59 @@
+.grid {
+  height: 90%;
+    width: 100%;
+    padding-left: 1%;
+    padding-right: 3%;
+    margin-top: 2%;
+    //background: linear-gradient(300deg, #1e2b38, #6d2323, #e99191, #4882a3);
+  }
+  
+  .skeletonBox {
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+  
+  .skeletonImage {
+    height: 200px;
+  }
+  S
+  .skeletonContent {
+    padding: 1.5rem;
+  }
+  
+  .skeletonText {
+    margin-top: 1rem;
+  }
+  
+  .gridItem {
+    
+    border: 2px solid #e2e8f0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    width: 100%;
+    height: 75%;
+    margin-top: 1%;
+    transition: filter 0.3s ease;
+    background-color: white;
+  
+    &:hover {
+      filter: brightness(0.3);
+      border-color: rgb(184, 20, 20);
+    }
+  }
+  
+  .image {
+    width: 100%;
+    height: 85%;
+    object-fit: cover;
+  }
+  
+  .infoBox {
+    padding: 0.25rem;
+  }
+  
+  .title {
+    font-weight: bold;
+    font-size: 1.25rem;
+  }
+  
