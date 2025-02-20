@@ -20,7 +20,7 @@ namespace evoWatch.Database.Models
         public  int ReleaseYear { get; set; }
 
         [Range(1900, 2100, ErrorMessage = "ReleaseYear must be between 1900 and 2100.")]
-        public int FinalYear { get; set; }
+        public int? FinalYear { get; set; }
 
         [MaxLength(1000, ErrorMessage = "Description cannot be longer than 1000 characters.")]
         public string Description { get; set; }

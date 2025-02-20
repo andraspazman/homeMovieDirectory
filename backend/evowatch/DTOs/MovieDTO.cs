@@ -2,23 +2,22 @@
 
 namespace evoWatch.DTOs
 {
-    public class EpisodeDTO
+    public class MovieDTO
     {
         public Guid Id { get; set; }
         public string Title { get; set; }
-        public string Genre { get; set; } 
-        public int ReleaseYear { get; set; }     
-        public string Description { get; set; }        
+        public string Genre { get; set; }
+        public int ReleaseYear { get; set; }
+        public string Description { get; set; }
         public string Language { get; set; }
-        public string? Award { get; set; }    
+        public string? Award { get; set; }
         public string? VideoPath { get; set; }
         public string? CoverImagePath { get; set; }
         public bool IsMovie { get; set; }
-        public Guid SeasonId { get; set; }
 
-        public static EpisodeDTO CreateFromEpisodeDocument(Episode episode)
+        public static MovieDTO CreateFromEpisodeDocument(Episode episode)
         {
-            return new EpisodeDTO
+            return new MovieDTO
             {
                 Id = episode.Id,
                 Title = episode.Title,
@@ -29,8 +28,7 @@ namespace evoWatch.DTOs
                 Award = episode.Award,
                 VideoPath = episode.VideoPath,
                 CoverImagePath = episode.CoverImagePath,
-                IsMovie = episode.IsMovie,
-                SeasonId = episode.Season.Id, // Feltételezzük, hogy Season nem null
+                IsMovie = true 
             };
         }
     }

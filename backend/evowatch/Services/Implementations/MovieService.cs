@@ -1,33 +1,108 @@
-﻿namespace evoWatch.Services.Implementations
+﻿using evoWatch.Database.Models;
+using evoWatch.Database.Repositories;
+using evoWatch.DTOs;
+using evoWatch.Exceptions;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using System.IO;
+using System.Linq;
+
+namespace evoWatch.Services.Implementations
 {
     public class MovieService : IMovieService
     {
-        private readonly string _videoDirectory = Path.Combine(Directory.GetCurrentDirectory(), "UploadedVideos");
+        private readonly IEpisodesRepository _episodesRepository;
+        private readonly IFileSystemService _fileService;
+        private readonly IWebHostEnvironment _env;
+        private readonly IVideoStorageService _videoStorageService;
 
-        public MovieService()
+        public MovieService(
+            IEpisodesRepository episodesRepository,
+            IFileSystemService fileService,
+            IWebHostEnvironment env,
+            IConfiguration configuration,
+            IVideoStorageService videoStorageService)
         {
-            if (!Directory.Exists(_videoDirectory))
-            {
-                Directory.CreateDirectory(_videoDirectory);
-            }
+            _episodesRepository = episodesRepository;
+            _fileService = fileService;
+            _env = env;
+            _videoStorageService = videoStorageService;
         }
 
-        public async Task<string> SaveVideoAsync(IFormFile file)
+        public async Task<MovieDTO> GetMovieByIdAsync(Guid id)
         {
-            if (file == null || file.Length == 0)
-                throw new ArgumentException("Invalid file.");
+            var movie = await _episodesRepository.GetEpisodeByIdAsync(id);
+            if (movie == null || !movie.IsMovie)
+                throw new MovieNotFoundException();
+            return MovieDTO.CreateFromEpisodeDocument(movie);
+        }
 
-            if (Path.GetExtension(file.FileName).ToLower() != ".mp4")
-                throw new ArgumentException("Only MP4 files are allowed.");
+        public async Task<IEnumerable<MovieDTO>> GetMoviesAsync()
+        {
+            var movies = await _episodesRepository.GetEpisodesAsync();
+            return movies.Select(m => MovieDTO.CreateFromEpisodeDocument(m));
+        }
 
-            var filePath = Path.Combine(_videoDirectory, file.FileName);
+        public async Task<MovieDTO> AddMovieAsync(MovieDTO movieDto, IFormFile videoFile, IFormFile coverImage)
+        {
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            var savedVideoPath = await _videoStorageService.SaveVideoAsync(videoFile);
+            movieDto.VideoPath = savedVideoPath;
+
+
+            var newMovie = new Episode
             {
-                await file.CopyToAsync(stream);
-            }
+                Id = Guid.NewGuid(),
+                Title = movieDto.Title,
+                Genre = movieDto.Genre,
+                ReleaseYear = movieDto.ReleaseYear,
+                Description = movieDto.Description,
+                Language = movieDto.Language,
+                Award = movieDto.Award,
+                VideoPath = movieDto.VideoPath,
+                IsMovie = true,
+                Season = null,
+                ProductionCompany = null,
+                Person = new List<Person>(),
+                Characters = new List<Character>()
+            };
 
-            return filePath;
+            newMovie.CoverImagePath = await _fileService.SaveFileAsync(coverImage);
+
+            var result = await _episodesRepository.AddEpisodeAsync(newMovie);
+            return MovieDTO.CreateFromEpisodeDocument(result);
+        }
+
+        public async Task<MovieDTO> UpdateMovieAsync(Guid id, MovieDTO movieDto, IFormFile? newVideoFile, IFormFile? newCoverImage)
+        {
+            var existingMovie = await _episodesRepository.GetEpisodeByIdAsync(id);
+            if (existingMovie == null || !existingMovie.IsMovie)
+                throw new MovieNotFoundException();
+
+            existingMovie.Title = !string.IsNullOrEmpty(movieDto.Title) ? movieDto.Title : existingMovie.Title;
+            existingMovie.Genre = !string.IsNullOrEmpty(movieDto.Genre) ? movieDto.Genre : existingMovie.Genre;
+            existingMovie.ReleaseYear = movieDto.ReleaseYear > 0 ? movieDto.ReleaseYear : existingMovie.ReleaseYear;
+            existingMovie.Description = !string.IsNullOrEmpty(movieDto.Description) ? movieDto.Description : existingMovie.Description;
+            existingMovie.Language = !string.IsNullOrEmpty(movieDto.Language) ? movieDto.Language : existingMovie.Language;
+            existingMovie.Award = !string.IsNullOrEmpty(movieDto.Award) ? movieDto.Award : existingMovie.Award;
+
+            existingMovie.CoverImagePath = (newCoverImage?.Length > 0) ? await _fileService.SaveFileAsync(newCoverImage) : existingMovie.CoverImagePath;
+
+           
+            existingMovie.VideoPath = (newVideoFile?.Length > 0)  ? await _videoStorageService.SaveVideoAsync(newVideoFile) : existingMovie.VideoPath;
+
+            var result = await _episodesRepository.UpdateEpisodeAsync(existingMovie);
+            return MovieDTO.CreateFromEpisodeDocument(result);
+        }
+
+
+        public async Task<bool> DeleteMovieAsync(Guid id)
+        {
+            var existingMovie = await _episodesRepository.GetEpisodeByIdAsync(id);
+            if (existingMovie == null || !existingMovie.IsMovie)
+                throw new MovieNotFoundException();
+            return await _episodesRepository.DeleteEpisodeAsync(existingMovie);
         }
     }
 }

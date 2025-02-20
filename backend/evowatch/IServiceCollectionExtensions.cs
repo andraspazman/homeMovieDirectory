@@ -24,6 +24,7 @@ namespace evoWatch
             });
             services.AddScoped<ISeriesService, SeriesService>();
             services.AddScoped<IMovieService, MovieService>();
+            services.AddScoped<IVideoStorageService, VideoStorageService>();
 
             return services;
         }

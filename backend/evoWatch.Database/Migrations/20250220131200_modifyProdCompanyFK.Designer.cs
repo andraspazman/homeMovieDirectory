@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using evoWatch.Database;
 
@@ -11,9 +12,11 @@ using evoWatch.Database;
 namespace evoWatch.Database.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20250220131200_modifyProdCompanyFK")]
+    partial class modifyProdCompanyFK
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -110,7 +113,7 @@ namespace evoWatch.Database.Migrations
                     b.Property<int>("ReleaseYear")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("SeasonId")
+                    b.Property<Guid>("SeasonId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Title")
@@ -332,7 +335,9 @@ namespace evoWatch.Database.Migrations
 
                     b.HasOne("evoWatch.Database.Models.Season", "Season")
                         .WithMany("Episodes")
-                        .HasForeignKey("SeasonId");
+                        .HasForeignKey("SeasonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("ProductionCompany");
 

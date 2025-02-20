@@ -14,7 +14,7 @@ namespace evoWatch.Services.Implementations
         private readonly ISeasonsRepository _seasonsRepository;
         private readonly IEpisodesRepository _episodesRepository;
         private readonly IMovieService _movieService;
-        private readonly IWebHostEnvironment _env;  // Injektáljuk a web hosting környezetet
+        private readonly IWebHostEnvironment _env;
         private readonly IFileSystemService _fileService;
 
         public SeriesService(  
