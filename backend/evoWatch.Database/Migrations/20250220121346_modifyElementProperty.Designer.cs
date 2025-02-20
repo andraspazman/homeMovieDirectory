@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using evoWatch.Database;
 
@@ -11,9 +12,11 @@ using evoWatch.Database;
 namespace evoWatch.Database.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20250220121346_modifyElementProperty")]
+    partial class modifyElementProperty
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -104,13 +107,13 @@ namespace evoWatch.Database.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<Guid?>("ProductionCompanyId")
+                    b.Property<Guid>("ProductionCompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("ReleaseYear")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("SeasonId")
+                    b.Property<Guid>("SeasonId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Title")
@@ -328,11 +331,15 @@ namespace evoWatch.Database.Migrations
                 {
                     b.HasOne("evoWatch.Database.Models.ProductionCompany", "ProductionCompany")
                         .WithMany("Episodes")
-                        .HasForeignKey("ProductionCompanyId");
+                        .HasForeignKey("ProductionCompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("evoWatch.Database.Models.Season", "Season")
                         .WithMany("Episodes")
-                        .HasForeignKey("SeasonId");
+                        .HasForeignKey("SeasonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("ProductionCompany");
 
