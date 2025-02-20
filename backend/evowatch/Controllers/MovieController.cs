@@ -58,22 +58,21 @@ namespace evoWatch.Controllers
         [HttpPost(Name = nameof(AddMovie))]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(MovieDTO), StatusCodes.Status200OK)]
-        public async Task<IActionResult> AddMovie([FromForm] MovieDTO movieDto, IFormFile videoFile, IFormFile coverImage)
+        public async Task<IActionResult> AddMovie([FromForm] MovieDTO movieDto,  IFormFile? videoFile, IFormFile? coverImage)
         {
             if (movieDto == null)
             {
                 return BadRequest("Movie data is required.");
             }
 
-            if (videoFile == null || videoFile.Length == 0)
+            // Videó fájl most opcionális, de ha érkezik, akkor MP4 kiterjesztésűnek kell lennie.
+            if (videoFile != null && videoFile.Length > 0)
             {
-                return BadRequest("Video file is required.");
-            }
-
-            var extension = Path.GetExtension(videoFile.FileName).ToLower();
-            if (extension != ".mp4")
-            {
-                return BadRequest("Only MP4 files are allowed.");
+                var extension = Path.GetExtension(videoFile.FileName).ToLower();
+                if (extension != ".mp4")
+                {
+                    return BadRequest("Only MP4 files are allowed.");
+                }
             }
 
             var result = await _movieService.AddMovieAsync(movieDto, videoFile, coverImage);
