@@ -11,7 +11,11 @@ interface AuthModalProps {
 const API_LOGIN_URL = "https://localhost:7204/login";
 const API_REGISTER_URL = "https://localhost:7204/register";
 
-export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
+export default function AuthModal({
+  isOpen,
+  onClose,
+  onAuthSuccess,
+}: AuthModalProps) {
   const [isRegistration, setIsRegistration] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,7 +23,11 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
 
   const handleLogin = async () => {
     try {
-      await axios.post(API_LOGIN_URL, { email, password }, { withCredentials: true });
+      await axios.post(
+        API_LOGIN_URL,
+        { email, password },
+        { withCredentials: true }
+      );
       onAuthSuccess();
       onClose();
     } catch (error: unknown) {
@@ -32,12 +40,17 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
   };
 
   const handleRegistration = async () => {
+    // CHANGED: Hungarian text replaced with English
     if (password !== confirmPassword) {
-      alert("A jelszavak nem egyeznek!");
+      alert("Passwords do not match!");
       return;
     }
     try {
-      await axios.post(API_REGISTER_URL, { email, password }, { withCredentials: true });
+      await axios.post(
+        API_REGISTER_URL,
+        { email, password },
+        { withCredentials: true }
+      );
       onAuthSuccess();
       onClose();
     } catch (error: unknown) {
@@ -53,7 +66,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
     <Modal isOpen={isOpen} onClose={onClose} isCentered>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>{isRegistration ? "Regisztráció" : "Bejelentkezés"}</ModalHeader>
+        <ModalHeader>{isRegistration ? "Registration" : "Login"}</ModalHeader>
         <ModalCloseButton />
         <ModalBody pb={6}>
           <VStack spacing={4}>
@@ -66,7 +79,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
               />
             </FormControl>
             <FormControl>
-              <FormLabel>Jelszó</FormLabel>
+              <FormLabel>Password</FormLabel>
               <Input
                 type="password"
                 value={password}
@@ -75,7 +88,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
             </FormControl>
             {isRegistration && (
               <FormControl>
-                <FormLabel>Jelszó megerősítése</FormLabel>
+                <FormLabel>Verify password</FormLabel>
                 <Input
                   type="password"
                   value={confirmPassword}
@@ -88,16 +101,18 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
               onClick={isRegistration ? handleRegistration : handleLogin}
               width="full"
             >
-              {isRegistration ? "Regisztráció" : "Bejelentkezés"}
+              {isRegistration ? "Registration" : "Login"}
             </Button>
             <Text fontSize="sm" textAlign="center">
-              {isRegistration ? "Van már fiókod?" : "Nincs még fiókod?"}{" "}
+              {isRegistration
+                ? "Have an account?"
+                : "Don't have an account?"}{" "}
               <Button
                 variant="link"
                 colorScheme="blue"
                 onClick={() => setIsRegistration(!isRegistration)}
               >
-                {isRegistration ? "Bejelentkezés" : "Regisztráció"}
+                {isRegistration ? "Login" : "Registration"}
               </Button>
             </Text>
           </VStack>

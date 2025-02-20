@@ -1,7 +1,31 @@
 import { FunctionComponent } from "react";
-import { Box, Flex, IconButton, Input, Menu, MenuButton, MenuList, MenuItem, Divider, Avatar, Text, Switch, InputGroup, InputRightElement, Button, } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  IconButton,
+  Input,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Divider,
+  Avatar,
+  Text,
+  Switch,
+  InputGroup,
+  InputRightElement,
+  Button,
+  Spacer,
+} from "@chakra-ui/react";
 import { HamburgerIcon, SearchIcon } from "@chakra-ui/icons";
-import { CircleUserRound, Heart, LogOut, Settings, UserRoundPen } from "lucide-react";
+import {
+  CircleUserRound,
+  Clapperboard,
+  Heart,
+  LogOut,
+  Settings,
+  UserRoundPen,
+} from "lucide-react";
 
 import styles from "./NavBar.module.scss";
 import { useUser } from "../../context/UserContext";
@@ -12,7 +36,8 @@ interface NavBarProps {
   onFavouritesClick: () => void;
   onLogoutClick: () => void;
   toggleSidebar: () => void;
-  onLoginClick: () => void; // Ezt adjuk hozzá
+  onLoginClick: () => void;
+  onAddMediaClick: () => void;
 }
 
 const NavBar: FunctionComponent<NavBarProps> = ({
@@ -22,6 +47,7 @@ const NavBar: FunctionComponent<NavBarProps> = ({
   onLogoutClick,
   toggleSidebar,
   onLoginClick,
+  onAddMediaClick,
 }) => {
   const { user, setUser } = useUser();
 
@@ -29,7 +55,14 @@ const NavBar: FunctionComponent<NavBarProps> = ({
     <Box className={styles.navBar}>
       <Flex className={styles.navBarFlex}>
         <Flex className={styles.leftSection}>
-          <IconButton icon={<HamburgerIcon />} variant="ghost" color="red" mr={5} onClick={toggleSidebar} aria-label="Toggle Sidebar" />
+          <IconButton
+            icon={<HamburgerIcon />}
+            variant="ghost"
+            color="red"
+            mr={5}
+            onClick={toggleSidebar}
+            aria-label="Toggle Sidebar"
+          />
           <Text fontWeight="bold" fontSize="lg">
             hoomiFlix
           </Text>
@@ -51,9 +84,19 @@ const NavBar: FunctionComponent<NavBarProps> = ({
           </InputGroup>
         </Flex>
 
-        <Flex className={styles.rightSection}>
+        <Flex className={styles.rightSection} alignItems="center" w="15%" p={"0%"}>
           {user ? (
             <>
+              {/* Add media gomb bal oldalon */}
+              <Button
+                onClick={onAddMediaClick}
+                variant="ghost"
+                color="white"
+                leftIcon={<Clapperboard />}
+              >
+                Add media
+              </Button>     
+              <Spacer />
               <Menu>
                 <MenuButton
                   as={Avatar}
@@ -102,7 +145,14 @@ const NavBar: FunctionComponent<NavBarProps> = ({
               </Text>
             </>
           ) : (
-            <Button  onClick={onLoginClick} className={styles.loginButton}  variant="ghost" color={"white"} leftIcon={<CircleUserRound/>}>
+            <Button
+              onClick={onLoginClick}
+              className={styles.loginButton}
+              variant="ghost"
+              color="white"
+              leftIcon={<CircleUserRound />}
+              marginRight={"10%"}
+            >
               Login
             </Button>
           )}
