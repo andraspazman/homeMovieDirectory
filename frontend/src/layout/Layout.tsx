@@ -1,8 +1,8 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+// layout/Layout.tsx
+import { Outlet } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import axios from "axios";
 import NavBar from "../components/Navbar/Navbar";
-import HomePage from "../pages/HomePage";
 import AuthModal from "../components/Login/LoginForm";
 import { useState, useEffect } from "react"; 
 import { useDisclosure } from "@chakra-ui/react";
@@ -12,18 +12,17 @@ export default function Layout() {
   const { setUser } = useUser();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // MODIFIED: Külön useDisclosure hook-ok a login és az új média modalhoz
   const {
     isOpen: isAuthModalOpen,
     onOpen: onAuthModalOpen,
     onClose: onAuthModalClose,
-  } = useDisclosure(); //login modal
+  } = useDisclosure(); 
 
   const {
     isOpen: isAddMediaOpen,
     onOpen: onAddMediaOpen,
     onClose: onAddMediaClose,
-  } = useDisclosure(); // new media modal
+  } = useDisclosure(); 
 
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
@@ -41,27 +40,23 @@ export default function Layout() {
     }
   };
 
-  // AuseEffect hook, hogy az oldal betöltésekor ellenőrizze az autentikációt
   useEffect(() => {
     checkAuth();
   }, []);
 
   return (
-    <BrowserRouter>
+    <>
       <NavBar
         onSettingsClick={() => {}}
         onEditProfileClick={() => {}}
         onFavouritesClick={() => {}}
-        onLogoutClick={() => {
-          setUser(null);
-        }}
+        onLogoutClick={() => setUser(null)}
         toggleSidebar={toggleSidebar}
         onLoginClick={onAuthModalOpen} 
         onAddMediaClick={onAddMediaOpen}
       />
-      <Routes>
-        <Route path="/" element={<HomePage isSidebarOpen={isSidebarOpen} />} />
-      </Routes>
+      {/* Az Outlet helyére kerül a dinamikus tartalom */}
+      <Outlet context={{ isSidebarOpen }} />
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={onAuthModalClose}
@@ -71,6 +66,6 @@ export default function Layout() {
         isOpen={isAddMediaOpen}
         onClose={onAddMediaClose}
       /> 
-    </BrowserRouter>
+    </>
   );
 }
