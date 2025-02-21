@@ -5,7 +5,7 @@
     padding-right: 3%;
     margin-top: 2%;
     //background: linear-gradient(300deg, #1e2b38, #6d2323, #e99191, #4882a3);
-  }
+}
   
   .skeletonBox {
     border: 1px solid #e2e8f0;
@@ -56,4 +56,12 @@
     font-weight: bold;
     font-size: 1.25rem;
   }
-  
+
+.movieText{
+    align-items: center;
+    margin-top: 5%;
+    padding-left: 40%;
+    padding-right: 40%;
+    font-size: 3vh;
+    font-weight: bolder;
+}

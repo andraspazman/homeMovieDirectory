@@ -1,8 +1,8 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+// layout/Layout.tsx
+import { Outlet } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import axios from "axios";
 import NavBar from "../components/Navbar/Navbar";
-import HomePage from "../pages/HomePage";
 import AuthModal from "../components/Login/LoginForm";
 import { useState, useEffect } from "react"; 
 import { useDisclosure } from "@chakra-ui/react";
@@ -45,21 +45,18 @@ export default function Layout() {
   }, []);
 
   return (
-    <BrowserRouter>
+    <>
       <NavBar
         onSettingsClick={() => {}}
         onEditProfileClick={() => {}}
         onFavouritesClick={() => {}}
-        onLogoutClick={() => {
-          setUser(null);
-        }}
+        onLogoutClick={() => setUser(null)}
         toggleSidebar={toggleSidebar}
         onLoginClick={onAuthModalOpen} 
         onAddMediaClick={onAddMediaOpen}
       />
-      <Routes>
-        <Route path="/" element={<HomePage isSidebarOpen={isSidebarOpen} />} />
-      </Routes>
+      {/* Az Outlet helyére kerül a dinamikus tartalom */}
+      <Outlet context={{ isSidebarOpen }} />
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={onAuthModalClose}
@@ -69,6 +66,6 @@ export default function Layout() {
         isOpen={isAddMediaOpen}
         onClose={onAddMediaClose}
       /> 
-    </BrowserRouter>
+    </>
   );
 }

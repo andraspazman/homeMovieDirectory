@@ -1,9 +1,9 @@
 import { FunctionComponent } from "react";
 import { Box, Flex, Button, Divider, Checkbox, CheckboxGroup, Stack, Text } from "@chakra-ui/react";
 import { Film, MonitorPlay, House } from "lucide-react";
+import { Link } from "react-router-dom";
 import styles from "./Sidebar.module.scss";
-import { SidebarProps } from "../../interfaces/IsidebarProps.types"
-
+import { SidebarProps } from "../../interfaces/IsidebarProps.types";
 
 const Sidebar: FunctionComponent<SidebarProps> = ({
   isOpen,
@@ -16,13 +16,34 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
     <Box className={`${styles.sidebar} ${isOpen ? styles["sidebar-open"] : styles["sidebar-closed"]}`}>
       {isOpen && (
         <Flex className={styles.sidebarFlex}>
-          <Button className={styles.sidebarButton} variant="ghost" color="white" leftIcon={<House />}>
+          <Button
+            as={Link}
+            to="/"
+            className={styles.sidebarButton}
+            variant="ghost"
+            color="white"
+            leftIcon={<House />}
+          >
             Home
           </Button>
-          <Button className={styles.sidebarButton} variant="ghost" color="white" leftIcon={<MonitorPlay />}>
+          <Button
+            as={Link}
+            to="/series"
+            className={styles.sidebarButton}
+            variant="ghost"
+            color="white"
+            leftIcon={<MonitorPlay />}
+          >
             Series
           </Button>
-          <Button className={styles.sidebarButton} variant="ghost" color="white" leftIcon={<Film />}>
+          <Button
+            as={Link}
+            to="/movies"
+            className={styles.sidebarButton}
+            variant="ghost"
+            color="white"
+            leftIcon={<Film />}
+          >
             Movies
           </Button>
 

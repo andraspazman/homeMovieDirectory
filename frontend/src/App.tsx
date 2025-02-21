@@ -1,11 +1,14 @@
-
+// App.tsx
 import { UserProvider } from "./context/UserContext";
-import Layout from "./layout/Layout";
+import { BrowserRouter } from "react-router-dom";
+import AppRoutes from "./Routes/AppRoutes";
 
 function App() {
   return (
     <UserProvider>
-      <Layout />
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
     </UserProvider>
   );
 }

@@ -58,6 +58,10 @@ const SeriesGrid = ({ selectedGenres, selectedCountries }: SeriesGridProps) => {
   }
 
   return (
+    <>
+    <Box className={styles.movieText} >
+      <Text>Latest releases</Text>
+    </Box>
     <SimpleGrid rowGap={0} spacing={5} columns={[5]} className={styles.grid}>
       {filteredSeries.map((item) => (
         <GridItem key={item.id} className={styles.gridItem}>
@@ -66,6 +70,7 @@ const SeriesGrid = ({ selectedGenres, selectedCountries }: SeriesGridProps) => {
             alt={item.title}
             className={styles.image}
           />
+          
           <Box className={styles.infoBox}>
             <Text className={styles.title}>{item.title}</Text>
             <Text className={styles.genre}>{item.genre}</Text>
@@ -73,6 +78,7 @@ const SeriesGrid = ({ selectedGenres, selectedCountries }: SeriesGridProps) => {
         </GridItem>
       ))}
     </SimpleGrid>
+    </>
   );
 };
 
