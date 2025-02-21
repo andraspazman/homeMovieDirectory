@@ -12,18 +12,17 @@ export default function Layout() {
   const { setUser } = useUser();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // MODIFIED: Külön useDisclosure hook-ok a login és az új média modalhoz
   const {
     isOpen: isAuthModalOpen,
     onOpen: onAuthModalOpen,
     onClose: onAuthModalClose,
-  } = useDisclosure(); //login modal
+  } = useDisclosure(); 
 
   const {
     isOpen: isAddMediaOpen,
     onOpen: onAddMediaOpen,
     onClose: onAddMediaClose,
-  } = useDisclosure(); // new media modal
+  } = useDisclosure(); 
 
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
@@ -41,7 +40,6 @@ export default function Layout() {
     }
   };
 
-  // AuseEffect hook, hogy az oldal betöltésekor ellenőrizze az autentikációt
   useEffect(() => {
     checkAuth();
   }, []);

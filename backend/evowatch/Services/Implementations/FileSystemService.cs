@@ -65,38 +65,34 @@
             File.Delete(filepath);
         }
 
-        //For series and movies covers
+        
         public async Task<string?> SaveFileAsync(IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
                 return null;
             }
-
-            // Fájlkiterjesztés ellenőrzése
+            
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
             if (string.IsNullOrEmpty(extension) || !_permittedExtensions.Contains(extension))
             {
                 throw new Exception("Only PNG or JPG permitted.");
             }
 
-            // Ellenőrizzük, hogy a célmappa létezik-e, ha nem, létrehozzuk
             if (!Directory.Exists(_externalFolderPath))
             {
                 Directory.CreateDirectory(_externalFolderPath);
             }
 
-            // Egyedi fájlnév generálása
             var fileName = Guid.NewGuid().ToString() + extension;
             var filePath = Path.Combine(_externalFolderPath, fileName);
 
-            // Fájl mentése
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await file.CopyToAsync(stream);
             }
 
-            return fileName; // Visszaadjuk a mentett fájl nevét
+            return fileName;
         }
     }
 }
