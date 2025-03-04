@@ -25,6 +25,11 @@ namespace evoWatch
             services.AddScoped<ISeriesService, SeriesService>();
             services.AddScoped<IMovieService, MovieService>();
             services.AddScoped<IVideoStorageService, VideoStorageService>();
+            services.AddScoped<ISearchService, SearchService>();
+            services.AddScoped<ILatestContentService, LatestContentService>();
+            services.AddScoped<IVideoStreamingService, VideoStreamingService>();
+            services.AddScoped<ISeasonService, SeasonService>();
+            services.AddScoped<IEpisodeService, EpisodeService>();
 
             return services;
         }

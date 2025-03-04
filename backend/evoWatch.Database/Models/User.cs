@@ -10,7 +10,7 @@ namespace evoWatch.Database.Models
         public required string PasswordHash { get; set; }
         public byte[] PasswordSalt { get; set; }
         public bool IsActive { get; set; }
-        public string Nickname { get; set; }
+        public string? Nickname { get; set; }
         public UserRole Role { get; set; } = UserRole.User;
         public Guid? ImageId { get; set; }
     }

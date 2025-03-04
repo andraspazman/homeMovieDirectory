@@ -1,6 +1,6 @@
 import { FunctionComponent } from "react";
 import { Box, Flex, Button, Divider, Checkbox, CheckboxGroup, Stack, Text } from "@chakra-ui/react";
-import { Film, MonitorPlay, House } from "lucide-react";
+import { Film, MonitorPlay, House, CirclePlay } from "lucide-react";
 import { Link } from "react-router-dom";
 import styles from "./Sidebar.module.scss";
 import { SidebarProps } from "../../interfaces/IsidebarProps.types";
@@ -45,6 +45,19 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
             leftIcon={<Film />}
           >
             Movies
+          </Button>
+
+          <Divider my={4} borderColor="gray.600" />
+
+          <Button
+            as={Link}
+            to="/playlist"
+            className={styles.sidebarButton}
+            variant="ghost"
+            color="white"
+            leftIcon={<CirclePlay />}
+          >
+            Playlist
           </Button>
 
           <Divider my={4} borderColor="gray.600" />

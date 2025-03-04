@@ -12,16 +12,16 @@ namespace evoWatch.Database.Models
         public required string Title { get; set; }
 
         [MaxLength(50, ErrorMessage = "Genre cannot be longer than 50 characters.")]
-        public  string Genre { get; set; }
+        public  string? Genre { get; set; }
 
         [Range(1900, 2100, ErrorMessage = "ReleaseYear must be between 1900 and 2100.")]
-        public  int ReleaseYear { get; set; }
+        public  int? ReleaseYear { get; set; }
 
         [MaxLength(1000, ErrorMessage = "Description cannot be longer than 1000 characters.")]      
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [MaxLength(20, ErrorMessage = "Language cannot be longer than 50 characters.")]
-        public  string Language { get; set; }
+        public  string? Language { get; set; }
 
         [MaxLength(50, ErrorMessage = "Award cannot be longer than 50 characters.")]
         public  string? Award { get; set; }

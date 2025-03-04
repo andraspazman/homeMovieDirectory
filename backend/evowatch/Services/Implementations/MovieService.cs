@@ -46,7 +46,7 @@ namespace evoWatch.Services.Implementations
 
         public async Task<MovieDTO> AddMovieAsync(MovieDTO movieDto, IFormFile? videoFile, IFormFile? coverImage)
         {
-            // Ha érkezik videó fájl, akkor elmentjük, különben hagyjuk null értéken
+    
             if (videoFile != null && videoFile.Length > 0)
             {
                 var savedVideoPath = await _videoStorageService.SaveVideoAsync(videoFile);
@@ -54,10 +54,9 @@ namespace evoWatch.Services.Implementations
             }
             else
             {
-                movieDto.VideoPath = null; // vagy meghagyhatod az előző értéket
+                movieDto.VideoPath = null; 
             }
 
-            // Létrehozunk egy új Episode entitást, amely önálló filmet reprezentál
             var newMovie = new Episode
             {
                 Id = Guid.NewGuid(),
@@ -67,16 +66,24 @@ namespace evoWatch.Services.Implementations
                 Description = movieDto.Description,
                 Language = movieDto.Language,
                 Award = movieDto.Award,
-                VideoPath = movieDto.VideoPath, // Lehet null, ha nincs videó
+                VideoPath = movieDto.VideoPath, 
                 IsMovie = true,
-                Season = null, // Mivel önálló filmről van szó
+                Season = null,
                 ProductionCompany = null,
                 Person = new List<Person>(),
                 Characters = new List<Character>()
             };
 
-            // Mentjük a cover image-t a _fileService segítségével
-            newMovie.CoverImagePath = await _fileService.SaveFileAsync(coverImage);
+
+            if (coverImage != null && coverImage.Length > 0)
+            {
+                newMovie.CoverImagePath = await _fileService.SaveFileAsync(coverImage);
+            }
+            else
+            {
+              
+                newMovie.CoverImagePath = "covernotfound.jpg";
+            }
 
             var result = await _episodesRepository.AddEpisodeAsync(newMovie);
             return MovieDTO.CreateFromEpisodeDocument(result);

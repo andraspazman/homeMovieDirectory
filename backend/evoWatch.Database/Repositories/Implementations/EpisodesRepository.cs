@@ -1,4 +1,5 @@
 ﻿using evoWatch.Database.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,14 +19,14 @@ namespace evoWatch.Database.Repositories.Implementations
 
         public async Task<Episode> AddEpisodeAsync(Episode episode)
         {
-            var result = await _databaseContext.MoviesAndEpisodes.AddAsync(episode);
+            var result = await _databaseContext.MoviesAndEpisodes.AddAsync(episode); 
             await _databaseContext.SaveChangesAsync();
             return result.Entity;
         }
 
         public async Task<IEnumerable<Episode>> GetEpisodesAsync()
         {
-            return await Task.FromResult(_databaseContext.MoviesAndEpisodes.AsEnumerable());
+            return await Task.FromResult(_databaseContext.MoviesAndEpisodes.Include(e => e.Season).AsEnumerable()); //modifyed 
         }
 
         public async Task<Episode?> GetEpisodeByIdAsync(Guid id)
@@ -52,6 +53,13 @@ namespace evoWatch.Database.Repositories.Implementations
             {
                 return false;
             }
+        }
+
+        public async Task<Episode?> GetEpisodeByIdWithPersonsAsync(Guid id)
+        {
+            return await _databaseContext.MoviesAndEpisodes
+                .Include(e => e.Person) // Modify
+                .FirstOrDefaultAsync(e => e.Id == id);
         }
     }
 }
