@@ -126,6 +126,8 @@ namespace evoWatch.Controllers
                 return Problem($"Movie with specified ID: {id} not found", null, StatusCodes.Status404NotFound);
             }
         }
+
+
        
     }
 }

@@ -16,11 +16,9 @@ public class SearchService : ISearchService
 
     public async Task<IEnumerable<SearchResultDTO>> SearchByTitleAsync(string query)
     {
-        // Lekérjük az összes filmet és sorozatot
         var movies = await _movieService.GetMoviesAsync();
         var series = await _seriesService.GetSeriesAsync();
 
-        // Szűrés a title alapján (case-insensitive)
         var movieResults = movies
             .Where(m => m.Title.Contains(query, StringComparison.OrdinalIgnoreCase))
             .Select(m => new SearchResultDTO

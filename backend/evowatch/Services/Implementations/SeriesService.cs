@@ -40,7 +40,6 @@ namespace evoWatch.Services.Implementations
             return SeriesDTO.CreateFromSeriesDocument(series);
         }
 
-        // Új metódus: file feltöltés opcióval
         public async Task<SeriesDTO> AddSeriesAsync(SeriesDTO series, IFormFile? coverImage)
         {
             var newSeries = new Series()
@@ -53,8 +52,15 @@ namespace evoWatch.Services.Implementations
                 Description = series.Description
             };
 
-            // Kép mentése a külön FileService segítségével
-            newSeries.CoverImagePath = await _fileService.SaveFileAsync(coverImage);
+           
+            if (coverImage != null && coverImage.Length > 0)
+            {
+                newSeries.CoverImagePath = await _fileService.SaveFileAsync(coverImage);
+            }
+            else
+            {
+                newSeries.CoverImagePath = "covernotfound.jpg";
+            }
 
             var result = await _seriesRepository.AddSeriesAsync(newSeries);
             return SeriesDTO.CreateFromSeriesDocument(result);
@@ -77,7 +83,6 @@ namespace evoWatch.Services.Implementations
             existingSeries.FinalYear = series.FinalYear;
             existingSeries.Description = series.Description;
 
-            // Ha szükséges, itt is lehetőség van a kép frissítésére
 
             var result = await _seriesRepository.UpdateSeriesAsync(existingSeries);
             return SeriesDTO.CreateFromSeriesDocument(result);
@@ -87,68 +92,6 @@ namespace evoWatch.Services.Implementations
         {
             var seriesDelete = await _seriesRepository.GetSeriesByIdAsync(id) ?? throw new SeriesNotFoundException();
             return await _seriesRepository.DeleteSeriesAsync(seriesDelete);
-        }
-
-        public async Task<CompleteSeriesDTO> AddCompleteSeriesAsync(CompleteSeriesDTO completeSeriesDto, IFormFile? coverImage)
-        {
-            var newSeries = new Series
-            {
-                Id = Guid.NewGuid(),
-                Title = completeSeriesDto.SeriesDto.Title,
-                Genre = completeSeriesDto.SeriesDto.Genre,
-                ReleaseYear = completeSeriesDto.SeriesDto.ReleaseYear,
-                FinalYear = completeSeriesDto.SeriesDto.FinalYear,
-                Description = completeSeriesDto.SeriesDto.Description,     
-                CoverImagePath = await _fileService.SaveFileAsync(coverImage),
-                Seasons = new List<Season>()
-            };
-
-            foreach (var seasonDto in completeSeriesDto.SeasonDtos)
-            {
-                var newSeason = new Season
-                {
-                    Id = Guid.NewGuid(),
-                    SeasonNumber = seasonDto.SeasonNumber,
-                    ReleaseYear = seasonDto.ReleaseYear,   
-                    Episodes = new List<Episode>()
-                    // A navigációs property "Series" beállítása opcionális
-                    // az EF Core automatikusan beállítja a kapcsolatot.
-                };
-
-                if (seasonDto.Episodes != null && seasonDto.Episodes.Any())
-                {
-                    foreach (var episodeDto in seasonDto.Episodes)
-                    {
-                        var newEpisode = new Episode
-                        {
-                            Id = Guid.NewGuid(),
-                            Title = episodeDto.Title,
-                            Genre = episodeDto.Genre,
-                            ReleaseYear = episodeDto.ReleaseYear,
-                            Description = episodeDto.Description,
-                            Language = episodeDto.Language,
-                            Award = episodeDto.Award,
-                            VideoPath = episodeDto.VideoPath,
-                            CoverImagePath = episodeDto.CoverImagePath,
-                            IsMovie = episodeDto.IsMovie,
-                            // A navigációs property beállítása:
-                            Season = newSeason
-                        };
-
-                        newSeason.Episodes.Add(newEpisode);
-                    }
-                }
-
- 
-                newSeries.Seasons.Add(newSeason);
-            }
-          
-            var savedSeries = await _seriesRepository.AddSeriesAsync(newSeries);
-
-
-            // 4. A mentett objektum alapján készítsük el a visszatérő DTO-t
-            var result = CompleteSeriesDTO.CreateFromSeriesDocument(savedSeries);
-            return result;
         }
 
     }

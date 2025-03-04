@@ -19,7 +19,7 @@ namespace evoWatch.Controllers
         }
 
         /// <summary>
-        ///  List of all series.
+        /// Gets a list of all series.
         /// </summary>
         [HttpGet(Name = nameof(GetSeries))]
         [Produces(MediaTypeNames.Application.Json)]
@@ -31,7 +31,7 @@ namespace evoWatch.Controllers
         }
 
         /// <summary>
-        /// List a series by id.
+        /// Gets a series by its ID.
         /// </summary>
         [HttpGet("{id:guid}", Name = nameof(GetSeriesById))]
         [Produces(MediaTypeNames.Application.Json)]
@@ -111,15 +111,6 @@ namespace evoWatch.Controllers
                 return Problem($"Series with specified ID: {id} not found", null, StatusCodes.Status404NotFound);
             }
         }
-
-
-        [HttpPost("addcompleteseries")]
-        public async Task<IActionResult> AddCompleteSeries([FromForm] CompleteSeriesDTO completeSeriesDto, IFormFile? coverImage)
-        {
-            var result = await _seriesService.AddCompleteSeriesAsync(completeSeriesDto, coverImage);
-            return Ok(result);
-        }
-        
 
     }
 }

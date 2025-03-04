@@ -10,7 +10,5 @@ namespace evoWatch.Services
         Task<SeriesDTO> UpdateSeriesAsync(Guid id, SeriesDTO series);
         Task<bool> DeleteSeriesAsync(Guid id);
 
-        Task<CompleteSeriesDTO> AddCompleteSeriesAsync(CompleteSeriesDTO completeSeriesDto, IFormFile? coverImage);
-
     }
 }

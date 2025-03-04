@@ -1,15 +1,24 @@
 ﻿using evoWatch.Database.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace evoWatch.DTOs
 {
     public class SeasonDTO
     {
+        // Unique identifier for the season
         public Guid Id { get; set; }
+        // The season number
         public int SeasonNumber { get; set; }
+        // The year the season was released
         public int ReleaseYear { get; set; }
+        // The number of episodes in the season
         public int EpisodeCount { get; set; }
+        // The ID of the series this season belongs to
         public Guid SeriesId { get; set; }
-        public List<EpisodeDTO> Episodes { get; set; } = new List<EpisodeDTO>();
+
+        // Creates a SeasonDTO from a Season entity
         public static SeasonDTO CreateFromSeasonDocument(Season season)
         {
             return new SeasonDTO
@@ -18,10 +27,7 @@ namespace evoWatch.DTOs
                 SeasonNumber = season.SeasonNumber,
                 ReleaseYear = season.ReleaseYear,
                 EpisodeCount = season.EpisodeCount,
-                SeriesId = season.Series != null ? season.Series.Id : Guid.Empty,
-                Episodes = season.Episodes != null
-                    ? season.Episodes.Select(e => EpisodeDTO.CreateFromEpisodeDocument(e)).ToList()
-                    : new List<EpisodeDTO>()
+                SeriesId = season.Series != null ? season.Series.Id : Guid.Empty
             };
         }
     }

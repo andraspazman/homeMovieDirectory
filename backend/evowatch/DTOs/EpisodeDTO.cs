@@ -1,20 +1,19 @@
 ﻿using evoWatch.Database.Models;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace evoWatch.DTOs
 {
     public class EpisodeDTO
     {
         public Guid Id { get; set; }
-        public string Title { get; set; }
-        public string Genre { get; set; } 
-        public int ReleaseYear { get; set; }     
-        public string Description { get; set; }        
-        public string Language { get; set; }
-        public string? Award { get; set; }    
+        public string Title { get; set; } = string.Empty;
         public string? VideoPath { get; set; }
-        public string? CoverImagePath { get; set; }
         public bool IsMovie { get; set; }
         public Guid SeasonId { get; set; }
+
+        // Kapcsolódó személyek listája (DTO formában)
+        public List<PersonDTO> Persons { get; set; } = new List<PersonDTO>();
 
         public static EpisodeDTO CreateFromEpisodeDocument(Episode episode)
         {
@@ -22,15 +21,12 @@ namespace evoWatch.DTOs
             {
                 Id = episode.Id,
                 Title = episode.Title,
-                Genre = episode.Genre,
-                ReleaseYear = episode.ReleaseYear,
-                Description = episode.Description,
-                Language = episode.Language,
-                Award = episode.Award,
                 VideoPath = episode.VideoPath,
-                CoverImagePath = episode.CoverImagePath,
                 IsMovie = episode.IsMovie,
-                SeasonId = episode.Season.Id, // Feltételezzük, hogy Season nem null
+                SeasonId = episode.Season != null ? episode.Season.Id : Guid.Empty,
+                Persons = episode.Person != null
+                            ? episode.Person.Select(p => PersonDTO.CreateFromPerson(p)).ToList()
+                            : new List<PersonDTO>()
             };
         }
     }
