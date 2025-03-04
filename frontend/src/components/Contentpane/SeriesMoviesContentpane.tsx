@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom"; //MOD: Importáljuk a useNavigate hookot
 import { 
   SimpleGrid, Box, Image, Text, Skeleton, SkeletonText, GridItem, 
   Flex, HStack, Select, Button 
@@ -25,6 +25,7 @@ interface ContentPaneProps {
 
 const ContentPane = ({ selectedGenres, selectedCountries }: ContentPaneProps) => {
   const location = useLocation();
+  const navigate = useNavigate(); //MOD: Inicializáljuk a useNavigate hookot
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
@@ -113,6 +114,9 @@ const ContentPane = ({ selectedGenres, selectedCountries }: ContentPaneProps) =>
     return <Text color="red.500">{error}</Text>;
   }
 
+  //MOD: Meghatározzuk, hogy a részletes oldal melyik prefix-et használja (movie vagy series)
+  const detailRoutePrefix = location.pathname.includes("movies") ? "/movie" : "/series";
+
   return (
     <>
       {/* Filter Panel */}
@@ -163,7 +167,13 @@ const ContentPane = ({ selectedGenres, selectedCountries }: ContentPaneProps) =>
       {/* Grid megjelenítés */}
       <SimpleGrid rowGap={0} spacing={5} columns={[5]} className={styles.grid}>
         {currentItems.map((item) => (
-          <GridItem key={item.id} className={styles.gridItem}>
+          //MOD: A grid elemre kattintva navigálunk a részletes oldalra
+          <GridItem 
+            key={item.id} 
+            className={styles.gridItem} 
+            onClick={() => navigate(`${detailRoutePrefix}/${item.id}`)} //MOD: Navigáció a megfelelő oldalra
+            cursor="pointer" //MOD: Mutatja, hogy az elem kattintható
+          >
             <Image
               src={`https://localhost:7204/images/${item.coverImagePath}`}
               alt={item.title}

@@ -1,4 +1,3 @@
-// layout/Layout.tsx
 import { Outlet } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import axios from "axios";
