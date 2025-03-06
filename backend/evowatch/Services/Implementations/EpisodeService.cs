@@ -17,6 +17,7 @@ namespace evoWatch.Services.Implementations
         private readonly IWebHostEnvironment _env;
         private readonly IVideoStorageService _videoStorageService;
         private readonly IPeopleRepository _peopleRepository;
+        private readonly IProductionCompanyRepository _productionCompanyRepository;
 
 
         public EpisodeService(
@@ -26,7 +27,8 @@ namespace evoWatch.Services.Implementations
             IWebHostEnvironment env,
             IConfiguration configuration,
             IVideoStorageService videoStorageService,
-            IPeopleRepository peopleRepository)
+            IPeopleRepository peopleRepository,
+            IProductionCompanyRepository productionCompanyRepository)
         {
             _episodesRepository = episodesRepository;
             _seasonRepository = seasonRepository;
@@ -34,6 +36,7 @@ namespace evoWatch.Services.Implementations
             _env = env;
             _videoStorageService = videoStorageService;
             _peopleRepository = peopleRepository;
+            _productionCompanyRepository = productionCompanyRepository;
         }
 
         public async Task<EpisodeDTO> GetEpisodeByIdAsync(Guid id)
@@ -46,9 +49,7 @@ namespace evoWatch.Services.Implementations
         public async Task<IEnumerable<EpisodeDTO>> GetEpisodesAsync(Guid seasonId)
         {
             var episodes = await _episodesRepository.GetEpisodesAsync();
-            return episodes
-                .Where(e => !e.IsMovie && e.Season != null && e.Season.Id == seasonId)
-                .Select(e => EpisodeDTO.CreateFromEpisodeDocument(e));
+            return episodes.Where(e => !e.IsMovie && e.Season != null && e.Season.Id == seasonId).Select(e => EpisodeDTO.CreateFromEpisodeDocument(e));
         }
 
         public async Task<EpisodeDTO> AddEpisodeAsync(EpisodeDTO episodeDto, IFormFile? videoFile)
@@ -147,5 +148,98 @@ namespace evoWatch.Services.Implementations
 
             return EpisodeDTO.CreateFromEpisodeDocument(updatedEpisode);
         }
+
+        public async Task<IEnumerable<PersonDTO>> GetPersonsByEpisodeIdAsync(Guid episodeId)
+        {
+            // Használjuk a repository egy metódusát, amely betölti a kapcsolódó személyeket is:
+            var episode = await _episodesRepository.GetEpisodeByIdWithPersonsAsync(episodeId);
+            if (episode == null)
+                throw new EpisodeNotFoundException();
+
+            // A kapcsolódó személyeket átalakítjuk PersonDTO-ká
+            return episode.Person.Select(p => PersonDTO.CreateFromPerson(p)).ToList();
+        }
+
+        public async Task<EpisodeDTO> AddProductionCompanyToEpisodeAsync(Guid episodeId, ProductionCompanyDTO productionCompanyDto)
+        {
+            // Betöltjük az epizódot az adott azonosító alapján
+            var episode = await _episodesRepository.GetEpisodeByIdAsync(episodeId);
+            if (episode == null)
+                throw new EpisodeNotFoundException();
+
+            // Létrehozzuk a ProductionCompany entitást a DTO alapján.
+            // Itt feltételezzük, hogy új production company-ról van szó, ezért új Id-t generálunk.
+            var productionCompany = new ProductionCompany
+            {
+                Id = Guid.NewGuid(),
+                Name = productionCompanyDto.Name,
+                FoundationYear = productionCompanyDto.FoundationYear,
+                Country = productionCompanyDto.Country,
+                Website = productionCompanyDto.Website
+            };
+
+            // Felvesszük az adatbázisba az új filmgyártót
+            productionCompany = await _productionCompanyRepository.AddProductionCompanyAsync(productionCompany);
+
+            // Hozzárendeljük a filmgyártót az epizódhoz
+            // Feltételezzük, hogy az Episode entitásban van ProductionCompany vagy ProductionCompanyId property
+            episode.ProductionCompany = productionCompany;
+            // Ha explicit külső kulcsot használsz, akkor:
+            // episode.ProductionCompanyId = productionCompany.Id;
+
+            // Frissítjük az epizódot az adatbázisban
+            var updatedEpisode = await _episodesRepository.UpdateEpisodeAsync(episode);
+
+            // Visszaadjuk a frissített epizód DTO-ját
+            return EpisodeDTO.CreateFromEpisodeDocument(updatedEpisode);
+        }
+
+        /// <summary>
+        /// Deletes a production company by its ID.
+        /// Before deletion, removes the production company reference from all episodes referencing it.
+        /// </summary>
+        /// <param name="id">The production company ID</param>
+        /// <returns>A boolean indicating whether the deletion was successful.</returns>
+        public async Task<bool> DeleteProductionCompanyAsync(Guid id)
+        {
+            // Retrieve the production company
+            var productionCompany = await _productionCompanyRepository.GetProductionCompanyByIdAsync(id);
+            if (productionCompany == null)
+            {
+                throw new Exception("Production company not found.");
+            }
+
+            // Retrieve episodes that reference this production company
+            var episodes = await _episodesRepository.GetEpisodesByProductionCompanyIdAsync(id);
+            foreach (var episode in episodes)
+            {
+                // Remove the production company reference from the episode
+                episode.ProductionCompany = null;
+                // If using explicit foreign key, set it to null as well:
+                // episode.ProductionCompanyId = null;
+                await _episodesRepository.UpdateEpisodeAsync(episode);
+            }
+
+            // Now delete the production company
+            return await _productionCompanyRepository.DeleteProductionCompanyAsync(productionCompany);
+        }
+
+        public async Task<ProductionCompanyDTO> GetProductionCompanyByEpisodeIdAsync(Guid episodeId)
+        {
+            // Retrieve the episode with its production company
+            var episode = await _episodesRepository.GetEpisodeWithProductionCompanyAsync(episodeId);
+            if (episode == null)
+            {
+                throw new EpisodeNotFoundException();
+            }
+            if (episode.ProductionCompany == null)
+            {
+                throw new Exception("No production company assigned to this episode.");
+            }
+
+            // Convert the production company entity to its DTO
+            return ProductionCompanyDTO.CreateFromProductionCompanyDocument(episode.ProductionCompany);
+        }
+
     }
 }

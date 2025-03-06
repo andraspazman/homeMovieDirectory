@@ -49,14 +49,13 @@ namespace evoWatch.Services.Implementations
         public async Task<PersonDTO> UpdatePersonAsync(Guid id, PersonDTO personDto)
         {
             var person = await _peopleRepository.GetPersonByIdAsync(id);
-            if (person == null)
-                throw new Exception("Person not found");
+            if (person == null) throw new Exception("Person not found");
 
-            person.Name = personDto.Name;
-            person.Age = personDto.Age;
-            person.Role = personDto.Role;
-            person.Awards = personDto.Awards;
-            person.Gender = personDto.Gender;
+            person.Name = !string.IsNullOrEmpty(personDto.Name) ? personDto.Name : person.Name;
+            person.Age = personDto.Age.HasValue ? personDto.Age : person.Age;
+            person.Role = !string.IsNullOrEmpty(personDto.Role) ? personDto.Role : person.Role;
+            person.Awards = !string.IsNullOrEmpty(personDto.Awards) ? personDto.Awards : person.Awards;
+            person.Gender = !string.IsNullOrEmpty(personDto.Gender) ? personDto.Gender : person.Gender;
 
             var updated = await _peopleRepository.UpdatePersonAsync(person);
             return PersonDTO.CreateFromPerson(updated);

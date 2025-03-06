@@ -24,9 +24,7 @@ namespace evoWatch.DTOs
                 VideoPath = episode.VideoPath,
                 IsMovie = episode.IsMovie,
                 SeasonId = episode.Season != null ? episode.Season.Id : Guid.Empty,
-                Persons = episode.Person != null
-                            ? episode.Person.Select(p => PersonDTO.CreateFromPerson(p)).ToList()
-                            : new List<PersonDTO>()
+                Persons = episode.Person != null ? episode.Person.Select(p => PersonDTO.CreateFromPerson(p)).ToList() : new List<PersonDTO>()
             };
         }
     }

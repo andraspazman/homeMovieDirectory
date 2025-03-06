@@ -157,5 +157,77 @@ namespace evoWatch.Controllers
                 return Problem(ex.Message, null, StatusCodes.Status500InternalServerError);
             }
         }
+
+        /// <summary>
+        /// Retrieves the list of persons assigned to a given episode.
+        /// </summary>
+        [HttpGet("{episodeId:guid}/persons", Name = nameof(GetPersonsByEpisode))]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(IEnumerable<PersonDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetPersonsByEpisode(Guid episodeId)
+        {
+            try
+            {
+                var persons = await _episodeService.GetPersonsByEpisodeIdAsync(episodeId);
+                return Ok(persons);
+            }
+            catch (EpisodeNotFoundException ex)
+            {
+                return Problem(ex.Message, null, StatusCodes.Status404NotFound);
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message, null, StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        /// <summary>
+        /// Assigns a production company to the specified episode based on the provided ProductionCompanyDTO.
+        /// </summary>
+        /// <param name="episodeId">The ID of the episode</param>
+        /// <param name="productionCompanyDto">The DTO containing production company details</param>
+        /// <returns>The updated EpisodeDTO containing the assigned production company</returns>
+        [HttpPost("{episodeId}/productioncompany")]
+        public async Task<IActionResult> AddProductionCompanyToEpisode(Guid episodeId, [FromBody] ProductionCompanyDTO productionCompanyDto)
+        {
+            // Check if the production company data is provided
+            if (productionCompanyDto == null)
+            {
+                return BadRequest("Production company data is required.");
+            }
+
+            try
+            {
+                // Call the service method to assign the production company to the episode
+                var updatedEpisode = await _episodeService.AddProductionCompanyToEpisodeAsync(episodeId, productionCompanyDto);
+                return Ok(updatedEpisode);
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions (e.g., logging) and return an appropriate error message
+                return BadRequest(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Retrieves the production company for the specified episode.
+        /// </summary>
+        /// <param name="episodeId">The ID of the episode.</param>
+        /// <returns>A ProductionCompanyDTO with production company details.</returns>
+        [HttpGet("{episodeId}/productioncompany")]
+        public async Task<IActionResult> GetProductionCompanyByEpisodeId(Guid episodeId)
+        {
+            try
+            {
+                var productionCompanyDto = await _episodeService.GetProductionCompanyByEpisodeIdAsync(episodeId);
+                return Ok(productionCompanyDto);
+            }
+            catch (Exception ex)
+            {
+                // Return a 404 if the episode or production company is not found
+                return NotFound(ex.Message);
+            }
+        }
     }
 }
