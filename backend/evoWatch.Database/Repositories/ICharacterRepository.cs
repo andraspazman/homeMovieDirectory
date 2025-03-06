@@ -2,7 +2,7 @@
 
 namespace evoWatch.Database.Repositories
 {
-    internal interface ICharacterRepository
+    public interface ICharacterRepository
     {
         Task<IEnumerable<Character>> GetCharactersAsync();
         Task<Character> AddCharacterAsync(Character character);

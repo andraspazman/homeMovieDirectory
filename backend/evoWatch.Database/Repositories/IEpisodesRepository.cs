@@ -15,5 +15,9 @@ namespace evoWatch.Database.Repositories
         Task<Episode> UpdateEpisodeAsync(Episode episode);
         Task<bool> DeleteEpisodeAsync(Episode episode);
         Task<Episode?> GetEpisodeByIdWithPersonsAsync(Guid id);
+        Task<Episode> GetEpisodeByIdWithCharactersAsync(Guid id);
+        Task<Episode> GetEpisodeWithPersonsAndCharactersAsync(Guid id);
+        Task<IEnumerable<Episode>> GetEpisodesByProductionCompanyIdAsync(Guid productionCompanyId);
+        Task<Episode> GetEpisodeWithProductionCompanyAsync(Guid episodeId);
     }
 }

@@ -57,9 +57,34 @@ namespace evoWatch.Database.Repositories.Implementations
 
         public async Task<Episode?> GetEpisodeByIdWithPersonsAsync(Guid id)
         {
+            return await _databaseContext.MoviesAndEpisodes.Include(e => e.Person).FirstOrDefaultAsync(e => e.Id == id); //MOD
+        }
+
+        public async Task<Episode> GetEpisodeByIdWithCharactersAsync(Guid id)
+        {
+            return await _databaseContext.MoviesAndEpisodes.Include(e => e.Characters).ThenInclude(c => c.Person).FirstOrDefaultAsync(e => e.Id == id);
+        } // MOD: Ha szükséges, töltsük be a karakterekhez tartozó Person entitást is:
+
+        public async Task<Episode> GetEpisodeWithPersonsAndCharactersAsync(Guid id)
+        {
             return await _databaseContext.MoviesAndEpisodes
-                .Include(e => e.Person) // Modify
+                .Include(e => e.Person)               // Betölti az epizódhoz tartozó személyeket
+                .Include(e => e.Characters)           // Betölti az epizódhoz tartozó karaktereket
+                    .ThenInclude(c => c.Person)       // Betölti a karakterekhez tartozó személyeket
                 .FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+        public async Task<IEnumerable<Episode>> GetEpisodesByProductionCompanyIdAsync(Guid productionCompanyId)
+        {
+            return await _databaseContext.MoviesAndEpisodes
+                .Include(e => e.ProductionCompany)
+                .Where(e => e.ProductionCompany != null && e.ProductionCompany.Id == productionCompanyId)
+                .ToListAsync();
+        }
+
+        public async Task<Episode> GetEpisodeWithProductionCompanyAsync(Guid episodeId)
+        {
+            return await _databaseContext.MoviesAndEpisodes.Include(e => e.ProductionCompany).FirstOrDefaultAsync(e => e.Id == episodeId);
         }
     }
 }

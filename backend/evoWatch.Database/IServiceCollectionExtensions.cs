@@ -23,6 +23,8 @@ namespace evoWatch.Database
             services.AddScoped<ISeasonsRepository, SeasonsRepository>();
             services.AddScoped<IEpisodesRepository, EpisodeRepository>();
             services.AddScoped<IPeopleRepository, PeopleRepository>();
+            services.AddScoped<ICharacterRepository, CharacterRepository>();
+            services.AddScoped<IProductionCompanyRepository, ProductionCompanyRepository>();
 
             return services;
         }

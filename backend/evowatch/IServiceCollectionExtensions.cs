@@ -30,6 +30,9 @@ namespace evoWatch
             services.AddScoped<IVideoStreamingService, VideoStreamingService>();
             services.AddScoped<ISeasonService, SeasonService>();
             services.AddScoped<IEpisodeService, EpisodeService>();
+            services.AddScoped<IPersonService, PersonService>();
+            services.AddScoped<ICharacterService, CharacterService>();
+            services.AddScoped<IProductionCompanyService, ProductionCompanyService>();
 
             return services;
         }

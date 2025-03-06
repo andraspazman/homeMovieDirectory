@@ -33,8 +33,7 @@ namespace evoWatch.Services.Implementations
         public async Task<MovieDTO> GetMovieByIdAsync(Guid id)
         {
             var movie = await _episodesRepository.GetEpisodeByIdAsync(id);
-            if (movie == null || !movie.IsMovie)
-                throw new MovieNotFoundException();
+            if (movie == null || !movie.IsMovie) throw new MovieNotFoundException();
             return MovieDTO.CreateFromEpisodeDocument(movie);
         }
 
@@ -92,8 +91,7 @@ namespace evoWatch.Services.Implementations
         public async Task<MovieDTO> UpdateMovieAsync(Guid id, MovieDTO movieDto, IFormFile? newVideoFile, IFormFile? newCoverImage)
         {
             var existingMovie = await _episodesRepository.GetEpisodeByIdAsync(id);
-            if (existingMovie == null || !existingMovie.IsMovie)
-                throw new MovieNotFoundException();
+            if (existingMovie == null || !existingMovie.IsMovie) throw new MovieNotFoundException();
 
             existingMovie.Title = !string.IsNullOrEmpty(movieDto.Title) ? movieDto.Title : existingMovie.Title;
             existingMovie.Genre = !string.IsNullOrEmpty(movieDto.Genre) ? movieDto.Genre : existingMovie.Genre;
@@ -115,8 +113,7 @@ namespace evoWatch.Services.Implementations
         public async Task<bool> DeleteMovieAsync(Guid id)
         {
             var existingMovie = await _episodesRepository.GetEpisodeByIdAsync(id);
-            if (existingMovie == null || !existingMovie.IsMovie)
-                throw new MovieNotFoundException();
+            if (existingMovie == null || !existingMovie.IsMovie) throw new MovieNotFoundException();
             return await _episodesRepository.DeleteEpisodeAsync(existingMovie);
         }
     }
