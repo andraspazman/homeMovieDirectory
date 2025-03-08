@@ -112,5 +112,29 @@ namespace evoWatch.Controllers
             }
         }
 
+        /// <summary>
+        /// Gets the EP1 episode ID from a series by series ID.
+        /// </summary>
+        [HttpGet("{id:guid}/ep1-id", Name = nameof(GetEp1EpisodeId))]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(EpisodeIdDTO), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetEp1EpisodeId(Guid id)
+        {
+            try
+            {
+                var result = await _seriesService.GetEp1EpisodeIdAsync(id);
+                return Ok(result);
+            }
+            catch (SeriesNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (EpisodeNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+        }
+
     }
 }

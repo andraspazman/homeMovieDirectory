@@ -194,12 +194,7 @@ namespace evoWatch.Services.Implementations
             return EpisodeDTO.CreateFromEpisodeDocument(updatedEpisode);
         }
 
-        /// <summary>
-        /// Deletes a production company by its ID.
-        /// Before deletion, removes the production company reference from all episodes referencing it.
-        /// </summary>
-        /// <param name="id">The production company ID</param>
-        /// <returns>A boolean indicating whether the deletion was successful.</returns>
+
         public async Task<bool> DeleteProductionCompanyAsync(Guid id)
         {
             // Retrieve the production company

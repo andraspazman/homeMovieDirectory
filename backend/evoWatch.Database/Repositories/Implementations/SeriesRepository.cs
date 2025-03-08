@@ -1,4 +1,5 @@
 ﻿using evoWatch.Database.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace evoWatch.Database.Repositories.Implementations
 {
@@ -48,6 +49,14 @@ namespace evoWatch.Database.Repositories.Implementations
             var result = _databaseContext.Series.Update(series);
             await _databaseContext.SaveChangesAsync();
             return result.Entity;          
+        }
+
+        public async Task<Series?> GetSeriesWithSeasonsAndEpisodesByIdAsync(Guid id)
+        {
+            return await _databaseContext.Series
+                .Include(s => s.Seasons)
+                    .ThenInclude(season => season.Episodes)
+                .FirstOrDefaultAsync(s => s.Id == id);
         }
 
     }
