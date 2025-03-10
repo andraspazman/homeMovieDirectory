@@ -9,5 +9,6 @@ namespace evoWatch.Database.Repositories
         Task<Season?> GetSeasonByIdAsync(Guid id);
         Task<Season> UpdateSeasonAsync(Season season);
         Task<bool> DeleteSeasonAsync(Season season);
+        Task<IEnumerable<Season>> GetSeasonsBySeriesIdAsync(Guid seriesId);
     }
 }
