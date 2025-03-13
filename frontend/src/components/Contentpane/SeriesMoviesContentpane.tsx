@@ -16,6 +16,7 @@ interface Item {
   description: string;
   language: string;
   releaseYear: number;
+  isMovie : boolean;
 }
 
 interface ContentPaneProps {
@@ -70,16 +71,17 @@ const ContentPane = ({ selectedGenres, selectedCountries }: ContentPaneProps) =>
     const genreMatch =
       (selectedGenres.length === 0 || selectedGenres.includes(item.genre)) &&
       (filterGenre === "" || item.genre === filterGenre);
-
     const countryMatch =
       selectedCountries.length === 0 || selectedCountries.includes(item.description);
-
     const languageMatch =
       filterLanguage === "" || item.language === filterLanguage;
-
     const yearMatch =
       filterYear === "" || String(item.releaseYear) === filterYear;
-
+  
+    // Ha a jelenlegi oldal movies, akkor csak azokat az elemeket tartjuk meg, ahol isMovie true
+    if (location.pathname.includes("movies")) {
+      return item.isMovie === true && genreMatch && countryMatch && languageMatch && yearMatch;
+    }
     return genreMatch && countryMatch && languageMatch && yearMatch;
   });
 

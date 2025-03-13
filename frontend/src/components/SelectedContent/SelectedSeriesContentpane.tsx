@@ -1,58 +1,32 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
-import { 
-  Flex, Box, Image, Text, Spinner, Heading, UnorderedList, ListItem, Button, 
-  Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter,
-  useDisclosure
-} from "@chakra-ui/react";
+import * as api from "../../utils/api";
+import { Flex, Box, Image,Text,Spinner,Heading,UnorderedList,ListItem,Button,Modal,ModalOverlay,ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter,useDisclosure,} from "@chakra-ui/react";
 import { FilePenLine, SquarePlus, Trash2 } from "lucide-react";
 import styles from "./SelectedContentpane.module.scss";
-
-// Importáljuk a frontend DTO-kat (interface-eket)
 import { SeriesDTO } from "../../types/SeriesDTO";
-import { PersonWithCharacterDTO } from "../../types/PersonWithCharacterDTO";
-import { ProductionCompanyDTO } from "../../types/ProductionCompanyDTO";
-import { SeasonDTO } from "../../types/SeasonDTO";
 import { EpisodeDTO } from "../../types/EpisodeDTO";
-import { EpisodeIdDTO } from "../../types/EpisodeIdDTO";
-
 import { EditSeriesModal } from "../SelectedContentForms/EditSeriesModal";
 import { AddSeasonModal } from "../../components/AddContent/AddSeasonForm";
-
-
+import { EditEpisodeModal } from "../SelectedContentForms/EditEpisodeModal";
+import { EditSeasonModal } from "../SelectedContentForms/EditSeasonModal";
+import { AddEpisodeModal } from "../AddContent/AddEpisodeForm";
 import { useUser } from "../../context/UserContext";
-
-
-
+import { useSeriesData } from "../../hooks/useSeriesData";
+import { useEpisodeDetails } from "../../hooks/useEpisodeDetails";
 
 const SelectedSeriesContentPane = () => {
   const { id } = useParams();
-
-  const [item, setItem] = useState<SeriesDTO | null>(null);
-  const [episodeId, setEpisodeId] = useState<string | null>(null);
-  const [personsWithCharacters, setPersonsWithCharacters] = useState<PersonWithCharacterDTO[]>([]);
-  const [productionCompany, setProductionCompany] = useState<ProductionCompanyDTO | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>("");
+  const { item, setItem, episodeId, seasonsWithEpisodes, setSeasonsWithEpisodes, loading, error } = useSeriesData(id!);
+  const { personsWithCharacters, productionCompany } = useEpisodeDetails(episodeId);
   const { user } = useUser();
   const isLoggedIn = !!user;
-
-  // Tömb: { season: SeasonDTO, episodes: EpisodeDTO[] }
-  const [seasonsWithEpisodes, setSeasonsWithEpisodes] = useState<Array<{
-    season: SeasonDTO;
-    episodes: EpisodeDTO[];
-  }>>([]);
-
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedVideoPath, setSelectedVideoPath] = useState<string>("");
 
-  // Videólejátszás modál
-  const { isOpen, onOpen, onClose } = useDisclosure();
-
-  // Edit Series modal
+  // Modals for editing/adding
   const [isEditSeriesOpen, setIsEditSeriesOpen] = useState(false);
   const [editSeriesData, setEditSeriesData] = useState<SeriesDTO | null>(null);
-
   const openEditSeries = (series: SeriesDTO) => {
     setEditSeriesData(series);
     setIsEditSeriesOpen(true);
@@ -63,131 +37,102 @@ const SelectedSeriesContentPane = () => {
   const openAddSeasonModal = () => setIsAddSeasonOpen(true);
   const closeAddSeasonModal = () => setIsAddSeasonOpen(false);
 
-  // Callback a frissítéshez
-  const handleSeasonAdded = (newSeason: SeasonDTO) => {
-    // Ha az új évadnak még nincsenek epizódjai, üres tömbbel jelenítjük meg
+  const handleSeasonAdded = (newSeason: any) => {
     const newEntry = { season: newSeason, episodes: [] };
-  
-    // Az új season hozzáadása a meglévő tömbhöz; opcionálisan rendezheted is a tömböt
     setSeasonsWithEpisodes((prev) => {
       const updated = [...prev, newEntry];
-      // Rendezés seasonNumber szerint (növekvő sorrendbe)
       updated.sort((a, b) => a.season.seasonNumber - b.season.seasonNumber);
       return updated;
     });
   };
 
-  // Endpointok
-  const seriesEndpoint = `https://localhost:7204/series/${id}`;
-  const episodeIdEndpoint = `https://localhost:7204/series/${id}/ep1-id`;
-  const seasonsEndpoint = `https://localhost:7204/seasons/byseries/${id}`;
+  const [isEditEpisodeModalOpen, setIsEditEpisodeModalOpen] = useState(false);
+  const [selectedEpisode, setSelectedEpisode] = useState<EpisodeDTO | null>(null);
 
-  // 1. Sorozat adatok lekérése
-  useEffect(() => {
-    if (!seriesEndpoint) return;
-    setLoading(true);
+  const handleEditEpisode = (episodeId: string) => {
+    const allEpisodes = seasonsWithEpisodes.flatMap((entry) => entry.episodes);
+    const foundEpisode = allEpisodes.find((ep) => ep.id === episodeId);
+      if (foundEpisode) {
+        setSelectedEpisode(foundEpisode);
+        setIsEditEpisodeModalOpen(true);
+      } else {
+        console.error("Episode not found for editing");
+      }
+  };
 
-    axios
-      .get<SeriesDTO>(seriesEndpoint)
-      .then((response) => {
-        setItem(response.data);
-      })
-      .catch((err) => {
-        console.error("Error loading series data:", err);
-        setError("Failed to load series data.");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [seriesEndpoint]);
+  const [isEditSeasonModalOpen, setIsEditSeasonModalOpen] = useState(false);
+  const [selectedSeason, setSelectedSeason] = useState<any>(null);
+  const handleEditSeason = (seasonId: string) => {
+    const foundSeason = seasonsWithEpisodes.find((entry) => entry.season.id === seasonId)?.season;
+      if (foundSeason) {
+        setSelectedSeason(foundSeason);
+        setIsEditSeasonModalOpen(true);
+      } else {
+        console.error("Season not found for editing");
+      }
+  };
 
-  // 2. EP1 episodeId lekérése
-  useEffect(() => {
-    if (!episodeIdEndpoint) return;
-    axios
-      .get<EpisodeIdDTO>(episodeIdEndpoint)
-      .then((response) => {
-        setEpisodeId(response.data.episodeId);
-      })
-      .catch((err) => {
-        console.error("Error loading episode id:", err);
-      });
-  }, [episodeIdEndpoint]);
-
-  // 3. Karakterek + produkciós cég lekérése az EP1-hez
-  useEffect(() => {
-    if (!episodeId) return;
-
-    axios
-      .get<PersonWithCharacterDTO[]>(`https://localhost:7204/character/episode/${episodeId}/persons-with-characters`)
-      .then((response) => {
-        setPersonsWithCharacters(response.data);
-      })
-      .catch((err) => {
-        console.error("Error loading persons with characters:", err);
-      });
-
-    axios
-      .get<ProductionCompanyDTO>(`https://localhost:7204/episode/${episodeId}/productioncompany`)
-      .then((response) => {
-        setProductionCompany(response.data);
-      })
-      .catch((err) => {
-        console.error("Error loading production company:", err);
-      });
-  }, [episodeId]);
-
-  // 4. Lekérjük az összes seasont, majd mindegyikhez az epizódokat.
-  useEffect(() => {
-    if (!id) return;
-    axios
-      .get<SeasonDTO[]>(seasonsEndpoint)
-      .then(async (seasonResponse) => {
-        const seasonsData = seasonResponse.data;
-        // Promise-okkal kérjük le minden season epizódjait
-        const promises = seasonsData.map(async (s) => {
-          const epResponse = await axios.get<EpisodeDTO[]>(`https://localhost:7204/episode/season/${s.id}`);
-          return { season: s, episodes: epResponse.data };
+  const handleDeleteEpisode = (episodeId: string) => {
+    if (window.confirm("Are you sure you want to delete this episode?")) {
+      api
+        .deleteEpisode(episodeId)
+        .then(() => {
+          setSeasonsWithEpisodes((prev) =>
+            prev.map((entry) => ({
+              ...entry,
+              episodes: entry.episodes.filter((ep) => ep.id !== episodeId),
+            }))
+          );
+        })
+        .catch((err) => {
+          console.error("Error deleting episode:", err);
+          alert("Failed to delete episode.");
         });
+    }
+  };
 
-        const results = await Promise.all(promises);
-
-        // Rendezés seasonNumber szerint
-        results.sort((a, b) => {
-          return a.season.seasonNumber - b.season.seasonNumber;
+  const handleDeleteSeason = (seasonId: string) => {
+    if (window.confirm("Are you sure to delete this season?")) {
+      api
+        .deleteSeason(seasonId)
+        .then(() => {
+          setSeasonsWithEpisodes((prev) => prev.filter((entry) => entry.season.id !== seasonId));
+        })
+        .catch((err) => {
+          console.error("Error deleting season:", err);
+          alert("Season deletion failed. It might contain episodes.");
         });
-        setSeasonsWithEpisodes(results);
-      })
-      .catch((err) => {
-        console.error("Error loading seasons or episodes:", err);
-        setError("Failed to load seasons or episodes data.");
-      });
-  }, [id, seasonsEndpoint]);
+    }
+  };
 
-  // Video: "Watch now" button
-  const handleWatchNow = (videoPath?: string) => {
+  const [isAddEpisodeModalOpen, setIsAddEpisodeModalOpen] = useState(false);
+  const [selectedSeasonForEpisode, setSelectedSeasonForEpisode] = useState<string | null>(null);
+  const handleAddEpisode = (seasonId: string) => {
+    if (!isLoggedIn) {
+      alert("You must login to add an episode!");
+      return;
+    }
+    setSelectedSeasonForEpisode(seasonId);
+    setIsAddEpisodeModalOpen(true);
+  };
+
+  const handleWatchNow = (epId?: string) => {
     if (!isLoggedIn) {
       alert("Login or register to watch");
       return;
     }
-    setSelectedVideoPath(videoPath || "");
+    if (epId) {
+      setSelectedVideoPath(`https://localhost:7204/video/episode/${epId}`);
+    } else {
+      setSelectedVideoPath("");
+    }
     onOpen();
   };
 
-  // Placeholder callbackek
   const handleAddPerson = () => console.log("Add Person clicked");
-  const handleDeletePerson = (personId: string) => console.log("Edit Person clicked, ID:", personId);
+  const handleDeletePerson = (personId: string) => console.log("Delete Person clicked, ID:", personId);
   const handleAddCharacter = () => console.log("Add Character clicked");
-  const handleAddSeason = () => console.log("Add Season clicked");
-  const handleEditSeason = (seasonId: string) => console.log("Edit Season clicked, ID:", seasonId);
-  const handleDeleteSeason = (seasonId: string) => console.log("Delete Season clicked, ID:", seasonId);
-  const handleAddEpisode = (seasonId: string) => console.log("Add Episode clicked, SeasonId:", seasonId);
-  const handleEditEpisode = (episodeId: string) => console.log("Edit Episode clicked, ID:", episodeId);
-  const handleDeleteEpisode = (episodeId: string) => console.log("Delete Episode clicked, ID:", episodeId);
 
-  // --------------------------------------------------------------------
-  // RENDER
-  // --------------------------------------------------------------------
   if (loading) {
     return (
       <Flex className={styles.loadingContainer}>
@@ -195,7 +140,6 @@ const SelectedSeriesContentPane = () => {
       </Flex>
     );
   }
-
   if (error) {
     return (
       <Box className={styles.errorBox}>
@@ -203,68 +147,58 @@ const SelectedSeriesContentPane = () => {
       </Box>
     );
   }
+  if (!item) return null;
 
-  if (!item) {
-    return null;
-  }
-
-  // **Itt választjuk szét Director és characters**:
-  const directors = personsWithCharacters.filter(
-    (pwc) => pwc.person.role === "director"
-  );
-  const characters = personsWithCharacters.filter(
-    (pwc) => pwc.person.role !== "director"
-  );
+  const directors = personsWithCharacters.filter((pwc) => pwc.person.role === "director");
+  const characters = personsWithCharacters.filter((pwc) => pwc.person.role !== "director");
 
   return (
     <Box>
       <Flex className={styles.topSection}>
         <Box className={styles.imageContainer}>
-          <Image 
-            src={`https://localhost:7204/images/${item.coverImagePath}`} alt={item.title} className={styles.coverImage}
-          />
+          <Image src={`https://localhost:7204/images/${item.coverImagePath}`} alt={item.title} className={styles.coverImage} />
         </Box>
-
         <Box className={styles.detailsContainer}>
-          <Heading size="xl" mb={3}>{item.title}
-          {isLoggedIn &&(<Button size="sm" colorScheme="yellow" ml={"2"} onClick={() => openEditSeries(item)}> <FilePenLine /> </Button>)}
-          </Heading> 
-          <Box mb={3}> 
+          <Heading size="xl" mb={3}> {item.title}{isLoggedIn && (<Button size="sm" colorScheme="yellow" ml="2" onClick={() => openEditSeries(item)}><FilePenLine /></Button>)}</Heading>
+            <Box mb={3} />
+              <Text><strong>Year:</strong> {item.releaseYear}</Text>
+              <Text><strong>Genre:</strong> {item.genre}</Text>
+              <Text><strong>Description:</strong> {item.description}</Text>
+              <Text><strong>Production Company:</strong> {productionCompany ? productionCompany.name : "n/a"}</Text>
+              <Text><strong>Website:</strong> {productionCompany ? productionCompany.website : "n/a"}</Text>
           </Box>
-          <Text><strong>Year:</strong> {item.releaseYear}</Text>
-          <Text><strong>Genre:</strong> {item.genre}</Text>
-          <Text><strong>Description:</strong> {item.description}</Text>
-          <Text><strong>Production Company:</strong> {productionCompany ? productionCompany.name : "n/a"} </Text>
-          <Text><strong>Website:</strong> {productionCompany ? productionCompany.website : "n/a"} </Text>
-        </Box>
-        <Box className={styles.castContainer}  border="1px solid #ccc" borderRadius="md"  p={10} >
+        <Box className={styles.castContainer} border="1px solid #ccc" borderRadius="md" p={10}>
           <Heading size="sm" mb={2}>Director(s)</Heading>
           {directors.length > 0 ? (
             <UnorderedList>
-              {directors.map((pwc) => (
-                <ListItem  key={pwc.person.id}>
+              {directors.slice(0, 2).map((pwc) => (
+                <ListItem key={pwc.person.id}>
                   {pwc.person.name}
-                  {isLoggedIn &&( <Button size="xs" colorScheme="white" color={"black"} onClick={() => handleDeletePerson(pwc.person.id)}> <Trash2 /> </Button>)}
-                  {pwc.characters && pwc.characters.length > 0 && (<UnorderedList> {pwc.characters.map((character) => ( <ListItem key={character.id}> {character.characterName} </ListItem>))}</UnorderedList>)}
+                  {isLoggedIn && (<Button size="xs" color="red" colorScheme="white" onClick={() => handleDeletePerson(pwc.person.id)}><Trash2 size={20} /></Button>)}
+                  {pwc.characters && pwc.characters.length > 0 && (
+                    <UnorderedList>{pwc.characters.slice(0, 5).map((character) => (<ListItem key={character.id}>{character.characterName}</ListItem>))}</UnorderedList>
+                  )}
                 </ListItem>
               ))}
             </UnorderedList>
           ) : (
             <Text>No director found.</Text>
           )}
-
           <Box mt={4} />
           <Heading size="sm" mb={2}>Cast &amp; Characters</Heading>
           {characters.length > 0 ? (
             <UnorderedList>
-              {characters.map((pwc) => (
-                <ListItem key={pwc.person.id} >
-                  {pwc.person.name} {pwc.person.role && `(${pwc.person.role})`}{" "} 
-                  {isLoggedIn &&( <Button size="xs"  colorScheme="white" color={"black"} onClick={() => handleDeletePerson(pwc.person.id)}><Trash2 /> </Button>)}
+              {characters.slice(0, 5).map((pwc) => (
+                <ListItem key={pwc.person.id}>
+                  {pwc.person.name} {pwc.person.role && `(${pwc.person.role})`}{" "}
+                  {isLoggedIn && (<Button size="xs" color="red" colorScheme="white" onClick={() => handleDeletePerson(pwc.person.id)}><Trash2 size={20} /></Button>)}
                   {pwc.characters && pwc.characters.length > 0 && (
                     <UnorderedList>
-                      {pwc.characters.map((character) => (
-                        <ListItem key={character.id}> {character.characterName} {character.nickName ? ` - ${character.nickName}` : ""} {character.role ? ` (${character.role})` : ""} </ListItem>
+                      {pwc.characters.slice(0, 5).map((character) => (
+                        <ListItem key={character.id}>
+                          {character.characterName} {character.nickName ? ` - ${character.nickName}` : ""}{" "}
+                          {character.role ? ` (${character.role})` : ""}
+                        </ListItem>
                       ))}
                     </UnorderedList>
                   )}
@@ -274,42 +208,46 @@ const SelectedSeriesContentPane = () => {
           ) : (
             <Text>No cast information provided.</Text>
           )}
-          {/* People/Characters buttons */}
           <Box mb={2} mt={5}>
-          {isLoggedIn &&(  <Button size="xs" colorScheme="green" mr={2} onClick={handleAddPerson}> Add Person <SquarePlus /> </Button>)}
-          {isLoggedIn &&(   <Button size="xs" colorScheme="green" onClick={handleAddCharacter}> Add Character <SquarePlus /> </Button>)} 
+            {isLoggedIn && (<Button size="xs" colorScheme="green" mr={2} onClick={handleAddPerson}>Add Person <SquarePlus /></Button>)}
+            {isLoggedIn && (<Button size="xs" colorScheme="green" onClick={handleAddCharacter}>Add Character <SquarePlus /></Button> )}
           </Box>
         </Box>
       </Flex>
 
-      {/* Alsó rész: Megjelenítjük az összes season-t és epizódot */}
       <Box className={styles.lowerSection}>
-        <Heading size="md" mb={4}>Seasons &amp; Episodes
-         {isLoggedIn &&( <Button size="s" colorScheme="green" ml={2} onClick={openAddSeasonModal}> <SquarePlus /> </Button>)}
+        <Heading size="md" mb={4}>
+          Seasons &amp; Episodes
+          {isLoggedIn && (<Button size="s" colorScheme="green" ml={2} onClick={openAddSeasonModal}><SquarePlus /></Button> )}
         </Heading>
-       
         {seasonsWithEpisodes.length > 0 ? (
           <UnorderedList styleType="none" ml={0}>
             {seasonsWithEpisodes.map((entry) => {
               const { season, episodes } = entry;
               return (
-                <ListItem  key={season.id}  border="1px solid #ccc" p={3}  mb={4}  borderRadius="md">
+                <ListItem key={season.id} border="1px solid #ccc" p={3} mb={4} borderRadius="md">
                   <Box mb={2}>
-                    <Text fontWeight="bold" display="inline-block" mr={2}> Season {season.seasonNumber} ({season.releaseYear}) </Text>
-                    {/* Buttons for addm edit, delete */}
-                    {isLoggedIn && (<Button size="xs" mr={1} onClick={() => handleAddEpisode(season.id)}> <SquarePlus /> </Button>)}
-                    {isLoggedIn && ( <Button size="xs" mr={2} onClick={() => handleEditSeason(season.id)} ><FilePenLine /></Button> )}
-                    {isLoggedIn && ( <Button size="xs" onClick={() => handleDeleteSeason(season.id)}> <Trash2 /></Button> )}
+                    <Text fontWeight="bold" display="inline-block" mr={2}>Season {season.seasonNumber} ({season.releaseYear})</Text>
+                    {isLoggedIn && (
+                      <>
+                        <Button size="xs" color="green" mr={1} onClick={() => handleAddEpisode(season.id)}><SquarePlus size={17} /></Button>
+                        <Button size="xs" color="orange" mr={2} onClick={() => handleEditSeason(season.id)}><FilePenLine size={17} /></Button>
+                        <Button size="xs" color="red" onClick={() => handleDeleteSeason(season.id)}><Trash2 size={17} /></Button>
+                      </>
+                    )}
                   </Box>
-
                   {episodes.length > 0 ? (
-                    <UnorderedList styleType="disc" ml={4} fontWeight="semibold" >
+                    <UnorderedList styleType="disc" ml={4} fontWeight="semibold">
                       {episodes.map((ep) => (
-                        <ListItem key={ep.id} mb={2}>
+                        <ListItem key={ep.id} mb={2} p={1}>
+                          {isLoggedIn && (
+                            <>
+                              <Button size="xs" color="orange" mr={1} onClick={() => handleEditEpisode(ep.id)}><FilePenLine size={13} /></Button>
+                              <Button size="xs" color="red" mr={1} onClick={() => handleDeleteEpisode(ep.id)}><Trash2 size={13} /></Button>
+                            </>
+                          )}
                           {ep.title}{" "}
-                          <Button size="xs" colorScheme="blue"  ml={2}  onClick={() => handleWatchNow(ep.videoPath)} > Watch now </Button>
-                          { isLoggedIn && ( <Button  size="xs" ml={2} onClick={() => handleEditEpisode(ep.id)}> <FilePenLine /> </Button>)}
-                          { isLoggedIn && ( <Button size="xs"  ml={2} onClick={() => handleDeleteEpisode(ep.id)}><Trash2 /> </Button>) }
+                          <Button size="s" colorScheme="blue" p={1} ml={3} onClick={() => handleWatchNow(ep.id)}>Watch now</Button>
                         </ListItem>
                       ))}
                     </UnorderedList>
@@ -324,29 +262,81 @@ const SelectedSeriesContentPane = () => {
           <Text>No seasons found for this series.</Text>
         )}
 
-        {/* Modal a video lejátszáshoz */}
         <Modal isOpen={isOpen} onClose={onClose} isCentered size="xl">
           <ModalOverlay />
           <ModalContent>
             <ModalHeader>{item.title}</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
-              {selectedVideoPath ? ( <video width="100%" height="auto" controls> <source  src={selectedVideoPath}  type="video/mp4" />Your browser does not support video playback. </video>
+              {selectedVideoPath ? (
+                <video width="100%" height="auto" controls> <source src={selectedVideoPath} type="video/mp4" />Your browser does not support video playback.</video>
               ) : (
                 <Text>No video available.</Text>
               )}
             </ModalBody>
-            <ModalFooter>
-              {/* Optionally extra controls */}
-            </ModalFooter>
+            <ModalFooter>{/* Optionally extra controls */}</ModalFooter>
           </ModalContent>
         </Modal>
       </Box>
 
-      {/* EditSeriesModal conditionAL rendering */}
-      {isEditSeriesOpen && editSeriesData && (<EditSeriesModal isOpen={isEditSeriesOpen} onClose={closeEditSeries} series={editSeriesData} onSeriesUpdated={(updatedSeries) => {setItem(updatedSeries);}}/>)}
-      {isAddSeasonOpen && ( <AddSeasonModal isOpen={isAddSeasonOpen} onClose={closeAddSeasonModal} seriesId={item.id} onSeasonAdded={handleSeasonAdded}/>
-)}
+      {isEditSeriesOpen && editSeriesData && (
+        <EditSeriesModal
+          isOpen={isEditSeriesOpen}
+          onClose={closeEditSeries}
+          series={editSeriesData}
+          onSeriesUpdated={(updatedSeries) => setItem(updatedSeries)}
+        />
+      )}
+      {isAddSeasonOpen && item && (
+        <AddSeasonModal
+          isOpen={isAddSeasonOpen}
+          onClose={closeAddSeasonModal}
+          seriesId={item.id}
+          onSeasonAdded={handleSeasonAdded}
+        />
+      )}
+      {isEditEpisodeModalOpen && selectedEpisode && (
+        <EditEpisodeModal
+          isOpen={isEditEpisodeModalOpen}
+          onClose={() => setIsEditEpisodeModalOpen(false)}
+          episode={selectedEpisode}
+          onEpisodeUpdated={(updatedEpisode) => {
+            console.log("Episode updated:", updatedEpisode);
+            setIsEditEpisodeModalOpen(false);
+          }}
+        />
+      )}
+      {isAddEpisodeModalOpen && selectedSeasonForEpisode && (
+        <AddEpisodeModal
+          isOpen={isAddEpisodeModalOpen}
+          onClose={() => setIsAddEpisodeModalOpen(false)}
+          seasonId={selectedSeasonForEpisode}
+          onEpisodeAdded={(newEpisode: EpisodeDTO) => {
+            setSeasonsWithEpisodes((prev) =>
+              prev.map((entry) =>
+                entry.season.id === selectedSeasonForEpisode
+                  ? { season: entry.season, episodes: [...entry.episodes, newEpisode] }
+                  : entry
+              )
+            );
+          }}
+        />
+      )}
+      {isEditSeasonModalOpen && selectedSeason && (
+        <EditSeasonModal
+          isOpen={isEditSeasonModalOpen}
+          onClose={() => setIsEditSeasonModalOpen(false)}
+          season={selectedSeason}
+          onSeasonUpdated={(updatedSeason) => {
+            setSeasonsWithEpisodes((prev) =>
+              prev.map((entry) =>
+                entry.season.id === updatedSeason.id ? { ...entry, season: updatedSeason } : entry
+              )
+            );
+            setIsEditSeasonModalOpen(false);
+          }}
+        />
+      )}
     </Box>
   );
 };

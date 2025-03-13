@@ -101,10 +101,13 @@ namespace evoWatch.Services.Implementations
             if (series == null)
                 throw new SeriesNotFoundException();
 
-            // Összegyűjtjük az összes epizódot, majd keresünk olyan epizódot,
-            // amelynek a címében bárhol megtalálható az "EP1" karakterlánc.
-            var ep1Episode = series.Seasons
-                .SelectMany(season => season.Episodes)
+            // Kiválasztjuk azt a szezont, ahol a SeasonNumber értéke 1
+            var season = series.Seasons.FirstOrDefault(s => s.SeasonNumber == 1);
+            if (season == null)
+                throw new SeasonNotFoundException();
+
+            // Az adott szezonnak az epizódjai között keressük azt, amelyik címében szerepel az "EP1"
+            var ep1Episode = season.Episodes
                 .FirstOrDefault(e => e.Title.Trim().IndexOf("EP1", StringComparison.OrdinalIgnoreCase) >= 0);
 
             if (ep1Episode == null)
