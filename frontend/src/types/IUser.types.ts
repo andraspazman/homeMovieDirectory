@@ -9,6 +9,7 @@ export interface User {
 export interface UserContextType {
     user: User | null;
     setUser: (user: User | null) => void;
+    logout: () => void;
 }
 
 export interface UserProviderProps {

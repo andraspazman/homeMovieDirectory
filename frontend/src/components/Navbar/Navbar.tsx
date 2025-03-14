@@ -1,31 +1,17 @@
 import { FunctionComponent, useState, useEffect, useRef } from "react";
 import {
   Box,Flex,IconButton, Input, InputGroup, InputRightElement, Popover, PopoverTrigger, PopoverContent,PopoverArrow, PopoverBody,Spinner,
-  Text,Button, Menu, MenuButton, MenuList, MenuItem, Divider, Avatar, Switch, Spacer, useDisclosure, } from "@chakra-ui/react";
+  Text,Button, Menu, MenuButton, MenuList, MenuItem, Divider, Avatar,  Spacer, useDisclosure, } from "@chakra-ui/react";
 import { HamburgerIcon, SearchIcon } from "@chakra-ui/icons";
 import {CircleUserRound, Clapperboard, Heart, LogOut,Settings, UserRoundPen, } from "lucide-react";
 import axios from "axios";
 import { useUser } from "../../context/UserContext";
 import styles from "./NavBar.module.scss";
 import { useNavigate } from "react-router-dom";
+import { SearchResultDTO } from "../../types/SearchResultDTO";
+import { NavBarProps } from "../../interfaces/INavBarProps";
 
-interface NavBarProps {
-  onSettingsClick: () => void;
-  onEditProfileClick: () => void;
-  onFavouritesClick: () => void;
-  onLogoutClick: () => void;
-  toggleSidebar: () => void;
-  onLoginClick: () => void;
-  onAddMediaClick: () => void;
-}
 
-interface SearchResultDTO {
-  id: string;
-  title: string;
-  genre: string;
-  releaseYear: number;
-  type: string;
-}
 
 const NavBar: FunctionComponent<NavBarProps> = ({
   onSettingsClick,
@@ -174,6 +160,7 @@ const NavBar: FunctionComponent<NavBarProps> = ({
                   <MenuItem bg="gray.800" className={styles.myMenuItem}
                     onClick={() => {
                       onLogoutClick();
+                      localStorage.removeItem("jwt");
                       setUser(null);
                     }}
                   >
@@ -184,11 +171,10 @@ const NavBar: FunctionComponent<NavBarProps> = ({
               <Text ml={1} mr={5}>{user.username}</Text>
             </>
           ) : (
-            <Button  onClick={onLoginClick} className={styles.loginButton} variant="ghost" color="white" leftIcon={<CircleUserRound />} mr="10%">
+            <Button  onClick={onLoginClick} className={styles.loginButton} variant="ghost" color="white" leftIcon={<CircleUserRound />} mr="5%">
               Login
             </Button>
           )}
-          <Switch colorScheme="gray" mr={2} />
         </Flex>
       </Flex>
     </Box>
