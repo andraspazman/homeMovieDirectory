@@ -1,40 +1,51 @@
-// src/components/SelectedContent/SeasonList.tsx
 import React from "react";
-import { UnorderedList, ListItem, Text, Heading, Button, Box } from "@chakra-ui/react";
-import { FilePenLine, SquarePlus, Trash2 } from "lucide-react";
+import { UnorderedList, ListItem, Box, Text, Heading, Button } from "@chakra-ui/react";
+import { SquarePlus, FilePenLine, Trash2 } from "lucide-react";
 import { EpisodeDTO } from "../../types/EpisodeDTO";
-import { SeasonDTO } from "../../types/SeasonDTO";
-import styles from "./SelectedContentpane.module.scss";
 
-export interface SeasonEntry {
-  season: SeasonDTO;
+interface SeasonEntry {
+  season: {
+    id: string;
+    seasonNumber: number;
+    releaseYear: number;
+    // egyéb szükséges mezők
+  };
   episodes: EpisodeDTO[];
 }
 
-interface SeasonListProps {
+interface SeriesEpisodesProps {
   seasonsWithEpisodes: SeasonEntry[];
   isLoggedIn: boolean;
+  onAddSeason: () => void; // Új prop
   onAddEpisode: (seasonId: string) => void;
-  onEditSeason: (seasonId: string) => void;
-  onDeleteSeason: (seasonId: string) => void;
   onEditEpisode: (episodeId: string) => void;
   onDeleteEpisode: (episodeId: string) => void;
-  onWatchNow: (episodeId: string) => void;
+  onEditSeason: (seasonId: string) => void;
+  onDeleteSeason: (seasonId: string) => void;
+  onWatchNow: (episodeId?: string) => void;
 }
 
-const SeasonList: React.FC<SeasonListProps> = ({
+export const SeriesEpisodes: React.FC<SeriesEpisodesProps> = ({
   seasonsWithEpisodes,
   isLoggedIn,
+  onAddSeason,
   onAddEpisode,
-  onEditSeason,
-  onDeleteSeason,
   onEditEpisode,
   onDeleteEpisode,
+  onEditSeason,
+  onDeleteSeason,
   onWatchNow,
 }) => {
   return (
-    <Box className={styles.lowerSection}>
-      <Heading size="md" mb={4}>Seasons &amp; Episodes</Heading>
+    <Box>
+      <Heading size="md" mb={4}>
+        Seasons &amp; Episodes
+        {isLoggedIn && (
+          <Button size="s" colorScheme="green" ml={2} onClick={onAddSeason}>
+            <SquarePlus />
+          </Button>
+        )}
+      </Heading>
       {seasonsWithEpisodes.length > 0 ? (
         <UnorderedList styleType="none" ml={0}>
           {seasonsWithEpisodes.map((entry) => {
@@ -60,9 +71,9 @@ const SeasonList: React.FC<SeasonListProps> = ({
                   )}
                 </Box>
                 {episodes.length > 0 ? (
-                  <UnorderedList styleType="disc" ml={4} fontWeight="semibold">
+                  <UnorderedList styleType="none" ml={4} fontWeight="semibold">
                     {episodes.map((ep) => (
-                      <ListItem key={ep.id} mb={2} p={1}>
+                      <ListItem key={ep.id} mb={2} p={1} >
                         {isLoggedIn && (
                           <>
                             <Button size="xs" color="orange" mr={1} onClick={() => onEditEpisode(ep.id)}>
@@ -93,5 +104,3 @@ const SeasonList: React.FC<SeasonListProps> = ({
     </Box>
   );
 };
-
-export default SeasonList;

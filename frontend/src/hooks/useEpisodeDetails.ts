@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import * as api from "../utils/api";
+import * as api from "../utils/ApiClient";
 import { PersonWithCharacterDTO } from "../types/PersonWithCharacterDTO";
 import { ProductionCompanyDTO } from "../types/ProductionCompanyDTO";
 

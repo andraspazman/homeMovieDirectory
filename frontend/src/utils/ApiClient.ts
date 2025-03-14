@@ -39,3 +39,7 @@ export const deleteEpisode = (episodeId: string) => {
 export const deleteSeason = (seasonId: string) => {
   return axios.delete(`${BASE_URL}/seasons/${seasonId}`);
 };
+
+export const deletePerson = async (personId: string): Promise<void> => {
+  await axios.delete(`${BASE_URL}/person/${personId}`);
+};

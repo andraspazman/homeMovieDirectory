@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import * as api from "../utils/api";
+import * as api from "../utils/ApiClient";
 import { SeriesDTO } from "../types/SeriesDTO";
 import { SeasonDTO } from "../types/SeasonDTO";
 import {SeasonEpisodes} from "../interfaces/ISeasonEpisodes"

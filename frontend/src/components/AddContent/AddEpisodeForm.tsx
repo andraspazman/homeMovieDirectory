@@ -59,7 +59,7 @@ export const AddEpisodeModal: React.FC<AddEpisodeModalProps> = ({
 
     try {
       const formData = new FormData();
-      formData.append("Title", fullTitle);
+      formData.append("title", fullTitle);
       formData.append("SeasonId", seasonId);
       // Az IsMovie értéke mindig false (mivel epizód)
       formData.append("IsMovie", "false");
@@ -67,13 +67,14 @@ export const AddEpisodeModal: React.FC<AddEpisodeModalProps> = ({
         formData.append("videoFile", file);
       }
 
-      const response = await axios.post<EpisodeDTO>(
+      const response = await axios.post(
         "https://localhost:7204/episode",
         formData,
-        { headers: { "Content-Type" : "multipart/form-data" } }
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
+      
 
-      onEpisodeAdded(response.data);
+      onEpisodeAdded(response.data.episode);
       // Űrlap resetelése
       setEpisodeNumber("");
       setTitle("");
