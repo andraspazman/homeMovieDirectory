@@ -112,10 +112,8 @@ namespace evoWatch.Services.Implementations
             existingEpisode.Title = !string.IsNullOrEmpty(episodeDto.Title) ? episodeDto.Title : existingEpisode.Title;
 
             // Videófájl feltöltése, ha új fájl érkezett
-            if (newVideoFile != null && newVideoFile.Length > 0)
-            {
-                existingEpisode.VideoPath = await _videoStorageService.SaveVideoAsync(newVideoFile);
-            }
+            existingEpisode.VideoPath = (newVideoFile?.Length > 0) ? await _videoStorageService.SaveVideoAsync(newVideoFile) : existingEpisode.VideoPath;
+            
 
             var result = await _episodesRepository.UpdateEpisodeAsync(existingEpisode);
             return EpisodeDTO.CreateFromEpisodeDocument(result);

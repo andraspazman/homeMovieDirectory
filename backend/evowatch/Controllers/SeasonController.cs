@@ -63,5 +63,53 @@ namespace evoWatch.Controllers
                 return NotFound(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Updates the season's number and/or release year.
+        /// Only the provided values will be updated.
+        /// </summary>
+        /// <param name="seasonId">The ID of the season to update.</param>
+        /// <param name="seasonDto">The season data with new values for SeasonNumber and/or ReleaseYear.</param>
+        [HttpPatch("{seasonId:guid}")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(SeasonDTO), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateSeason(Guid seasonId, [FromBody] SeasonDTO seasonDto)
+        {
+            try
+            {
+                var updatedSeason = await _seasonService.UpdateSeasonAsync(seasonId, seasonDto);
+                return Ok(updatedSeason);
+            }
+            catch (SeasonNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Deletes a season only if it doesn't have any episodes.
+        /// </summary>
+        /// <param name="seasonId">The ID of the season to delete.</param>
+        [HttpDelete("{seasonId:guid}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> DeleteSeason(Guid seasonId)
+        {
+            try
+            {
+                await _seasonService.DeleteSeasonAsync(seasonId);
+                return NoContent();
+            }
+            catch (SeasonNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (SeasonNotEmptyException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

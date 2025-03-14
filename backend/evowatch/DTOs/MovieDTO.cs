@@ -28,7 +28,7 @@ namespace evoWatch.DTOs
                 Award = episode.Award,
                 VideoPath = episode.VideoPath,
                 CoverImagePath = episode.CoverImagePath,
-                IsMovie = true 
+                IsMovie = episode.IsMovie
             };
         }
     }
