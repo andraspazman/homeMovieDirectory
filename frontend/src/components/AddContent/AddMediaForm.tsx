@@ -147,18 +147,18 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({ isOpen, onClose })
                 <option value="action">Action</option>
                 <option value="animation">Animation</option>
                 <option value="sci-fi">Sci-Fi</option>
-                <option value="horror">Sci-Fi</option>
-                <option value="thriller">Sci-Fi</option>
-                <option value="adventure">Sci-Fi</option>
-                <option value="biography">Sci-Fi</option>
-                <option value="crime">Sci-Fi</option>
-                <option value="romance">Sci-Fi</option>
-                <option value="comedy">Sci-Fi</option>
-                <option value="documentary">Sci-Fi</option>
-                <option value="family">Sci-Fi</option>
-                <option value="history">Sci-Fi</option>
-                <option value="reality">Sci-Fi</option>
-                <option value="war">Sci-Fi</option>
+                <option value="horror">horror</option>
+                <option value="thriller">thriller</option>
+                <option value="adventure">adventure</option>
+                <option value="biography">biography</option>
+                <option value="crime">crime</option>
+                <option value="romance">romance</option>
+                <option value="comedy">comedy</option>
+                <option value="documentary">documentary</option>
+                <option value="family">family</option>
+                <option value="history">history</option>
+                <option value="reality">reality</option>
+                <option value="war">war</option>
               </Select>
             </FormControl>
 
@@ -182,7 +182,7 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({ isOpen, onClose })
                 <option value="japanese">Japanese</option>
                 <option value="french">French</option>
                 <option value="spanish">Spanish</option>
-                <option value="german">german</option>
+                <option value="german">German</option>
                 <option value="russian">Russian</option>
                 <option value="italian">Italian</option>
               </Select>

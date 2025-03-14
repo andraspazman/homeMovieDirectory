@@ -94,5 +94,27 @@ namespace evoWatch.Services.Implementations
             return await _seriesRepository.DeleteSeriesAsync(seriesDelete);
         }
 
+        public async Task<EpisodeIdDTO> GetEp1EpisodeIdAsync(Guid seriesId)
+        {
+            // Betöltjük a Series entitást a kapcsolódó Season-ekkel és Episode-ökkel
+            var series = await _seriesRepository.GetSeriesWithSeasonsAndEpisodesByIdAsync(seriesId);
+            if (series == null)
+                throw new SeriesNotFoundException();
+
+            // Kiválasztjuk azt a szezont, ahol a SeasonNumber értéke 1
+            var season = series.Seasons.FirstOrDefault(s => s.SeasonNumber == 1);
+            if (season == null)
+                throw new SeasonNotFoundException();
+
+            // Az adott szezonnak az epizódjai között keressük azt, amelyik címében szerepel az "EP1"
+            var ep1Episode = season.Episodes
+                .FirstOrDefault(e => e.Title.Trim().IndexOf("EP1", StringComparison.OrdinalIgnoreCase) >= 0);
+
+            if (ep1Episode == null)
+                throw new EpisodeNotFoundException();
+
+            return new EpisodeIdDTO { EpisodeId = ep1Episode.Id };
+        }
+
     }
 }

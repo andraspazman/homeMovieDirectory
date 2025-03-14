@@ -54,9 +54,13 @@ builder.Services.AddSwaggerGen(c => {
 
 builder.Services.Configure<FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 100000000; 
+    options.MultipartBodyLengthLimit = 524288000; 
 });
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 524288000; // 500 MB
+});
 
 var config = builder.Configuration;
 var videoUploadPath = config["FileStorage:VideoUploadPath"];

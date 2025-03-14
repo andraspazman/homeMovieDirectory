@@ -89,26 +89,36 @@ namespace evoWatch.Services.Implementations
             var existingEpisode = await _episodesRepository.GetEpisodeByIdAsync(id);
             if (existingEpisode == null || existingEpisode.IsMovie) throw new EpisodeNotFoundException();
 
-            // Csak akkor frissítjük az évadot, ha új SeasonId-t kapunk és az különbözik a jelenlegitől
-            if (episodeDto.SeasonId != Guid.Empty && episodeDto.SeasonId != existingEpisode.Season.Id)
+            // Frissítjük a Season-t csak akkor, ha a DTO-ban szerepel nem üres SeasonId
+            if (episodeDto.SeasonId != Guid.Empty)
             {
-                var season = await _seasonRepository.GetSeasonByIdAsync(episodeDto.SeasonId);
-                if (season == null) throw new SeasonNotFoundException();
-                existingEpisode.Season = season;
+                // Ha a jelenlegi Season nincs beállítva, vagy az új SeasonId különbözik a jelenlegitől
+                if (existingEpisode.Season == null || episodeDto.SeasonId != existingEpisode.Season.Id)
+                {
+                    var season = await _seasonRepository.GetSeasonByIdAsync(episodeDto.SeasonId);
+                    if (season != null)
+                    {
+                        existingEpisode.Season = season;
+                    }
+                    else
+                    {
+                        Console.Error.WriteLine($"Season not found for SeasonId: {episodeDto.SeasonId}. Season update skipped.");                
+                    }
+                }
             }
+            // Ha a SeasonId Guid.Empty, akkor feltételezzük, hogy nem kell módosítani a Season-t.
 
             // Frissítjük a többi mezőt
             existingEpisode.Title = !string.IsNullOrEmpty(episodeDto.Title) ? episodeDto.Title : existingEpisode.Title;
 
             // Videófájl feltöltése, ha új fájl érkezett
-            if (newVideoFile != null && newVideoFile.Length > 0)
-            {
-                existingEpisode.VideoPath = await _videoStorageService.SaveVideoAsync(newVideoFile);
-            }
+            existingEpisode.VideoPath = (newVideoFile?.Length > 0) ? await _videoStorageService.SaveVideoAsync(newVideoFile) : existingEpisode.VideoPath;
+            
 
             var result = await _episodesRepository.UpdateEpisodeAsync(existingEpisode);
             return EpisodeDTO.CreateFromEpisodeDocument(result);
         }
+
 
         public async Task<bool> DeleteEpisodeAsync(Guid id)
         {
@@ -194,12 +204,7 @@ namespace evoWatch.Services.Implementations
             return EpisodeDTO.CreateFromEpisodeDocument(updatedEpisode);
         }
 
-        /// <summary>
-        /// Deletes a production company by its ID.
-        /// Before deletion, removes the production company reference from all episodes referencing it.
-        /// </summary>
-        /// <param name="id">The production company ID</param>
-        /// <returns>A boolean indicating whether the deletion was successful.</returns>
+
         public async Task<bool> DeleteProductionCompanyAsync(Guid id)
         {
             // Retrieve the production company
