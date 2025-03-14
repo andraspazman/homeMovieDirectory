@@ -1,29 +1,13 @@
 import React from "react";
 import { Box, Heading, UnorderedList, ListItem, Text, Button } from "@chakra-ui/react";
 import { Trash2, SquarePlus } from "lucide-react";
+import { PersonWithCharacterDTO } from "../../types/PersonWithCharacterDTO";
 
-// Típusok (példák, igazítsd a valós projekthez)
-interface CharacterDTO {
-  id: string;
-  characterName: string;
-  nickName?: string;
-  role?: string;
-}
 
-interface PersonDTO {
-  id: string;
-  name: string;
-  role?: string;
-}
-
-interface PersonWithCharacters {
-  person: PersonDTO;
-  characters?: CharacterDTO[];
-}
 
 type DirectorsAndCharactersProps = {
-  directors: PersonWithCharacters[];
-  characters: PersonWithCharacters[];
+  directors: PersonWithCharacterDTO[];
+  characters: PersonWithCharacterDTO[];
   isLoggedIn: boolean;
   onDeletePerson: (personId: string) => void;
   onAddCharacter: (personId: string) => void;
@@ -44,7 +28,7 @@ export const DirectorsAndCharacters: React.FC<DirectorsAndCharactersProps> = ({
 }) => {
   return (
     <Box border="1px solid #ccc" borderRadius="md" p={10}>
-      {/* --- Directors rész --- */}
+      {/* --- Directors part --- */}
       <Heading size="sm" mb={2}>Director(s)</Heading>
       {directors.length > 0 ? (
         <UnorderedList>
@@ -52,23 +36,11 @@ export const DirectorsAndCharacters: React.FC<DirectorsAndCharactersProps> = ({
             <ListItem key={pwc.person.id ||index}>
               {pwc.person.name}
               {isLoggedIn && (
-                <Button
-                  size="xs"
-                  colorScheme="white"
-                  color="red"
-                  ml={2}
-                  onClick={() => onDeletePerson(pwc.person.id)}
-                >
-                  <Trash2 size={20} />
-                </Button>
+                <Button size="xs"  colorScheme="white"  color="red" ml={2} onClick={() => onDeletePerson(pwc.person.id)}><Trash2 size={20} /></Button>
               )}
               {pwc.characters && pwc.characters.length > 0 && (
                 <UnorderedList mt={2}>
-                  {pwc.characters.slice(0, 5).map((character, index) => (
-                    <ListItem key={character.id || index}>
-                      {character.characterName}
-                    </ListItem>
-                  ))}
+                  {pwc.characters.slice(0, 5).map((character, index) => (<ListItem key={character.id || index}>  {character.characterName} </ListItem>))}
                 </UnorderedList>
               )}
             </ListItem>
@@ -88,24 +60,8 @@ export const DirectorsAndCharacters: React.FC<DirectorsAndCharactersProps> = ({
               {pwc.person.name} {pwc.person.role && `(${pwc.person.role})`}{" "}
               {isLoggedIn && (
                 <>
-                  <Button
-                    size="xs"
-                    colorScheme="white"
-                    color="green"
-                    ml={2}
-                    onClick={() => onAddCharacter(pwc.person.id)}
-                  >
-                    <SquarePlus size={18} />
-                  </Button>
-                  <Button
-                    size="xs"
-                    colorScheme="white"
-                    color="red"
-                    ml={2}
-                    onClick={() => onDeletePerson(pwc.person.id)}
-                  >
-                    <Trash2 size={18} />
-                  </Button>
+                  <Button size="xs"   colorScheme="white"  color="green"  ml={2} onClick={() => onAddCharacter(pwc.person.id)}  > <SquarePlus size={18} />
+                  </Button>  <Button  size="xs" colorScheme="white"   color="red"   ml={2} onClick={() => onDeletePerson(pwc.person.id)} >   <Trash2 size={18} />  </Button>
                 </>
               )}
               {pwc.characters && pwc.characters.length > 0 && (
@@ -129,13 +85,7 @@ export const DirectorsAndCharacters: React.FC<DirectorsAndCharactersProps> = ({
       {/* --- ÚJ: Add Person gomb, ha be vagyunk jelentkezve --- */}
       {isLoggedIn && (
         <Box mt={5}>
-          <Button
-            size="xs"
-            colorScheme="green"
-            onClick={onAddPerson}
-          >
-            Add Person <SquarePlus size={18} />
-          </Button>
+          <Button size="xs"  colorScheme="green"  onClick={onAddPerson} > Add Person <SquarePlus size={18} /></Button>
         </Box>
       )}
     </Box>

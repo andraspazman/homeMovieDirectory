@@ -1,18 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
-  FormControl,
-  FormLabel,
-  Input,
-  Button,
-  useToast,
-} from "@chakra-ui/react";
+import {Modal,ModalOverlay,ModalContent,ModalHeader,ModalCloseButton,ModalBody,ModalFooter,FormControl,FormLabel,Input,Button,useToast,} from "@chakra-ui/react";
 import axios from "axios";
 import { ProductionCompanyDTO } from "../../types/ProductionCompanyDTO";
 
@@ -92,45 +79,25 @@ const EditProductionCompanyModal: React.FC<EditProductionCompanyModalProps> = ({
         <ModalBody>
           <FormControl mb={3}>
             <FormLabel>Name</FormLabel>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter company name"
-            />
+            <Input value={name} onChange={(e) => setName(e.target.value)}placeholder="Enter company name"/>
           </FormControl>
           <FormControl mb={3}>
             <FormLabel>Foundation Year</FormLabel>
-            <Input
-              type="number"
-              value={foundationYear}
-              onChange={(e) => setFoundationYear(e.target.value)}
-              placeholder="Enter foundation year"
-            />
+            <Input type="number" value={foundationYear} onChange={(e) => setFoundationYear(e.target.value)} placeholder="Enter foundation year"/>
           </FormControl>
           <FormControl mb={3}>
             <FormLabel>Country</FormLabel>
-            <Input
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              placeholder="Enter country"
+            <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Enter country"
             />
           </FormControl>
           <FormControl mb={3}>
             <FormLabel>Website</FormLabel>
-            <Input
-              value={website}
-              onChange={(e) => setWebsite(e.target.value)}
-              placeholder="Enter website"
-            />
+            <Input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="Enter website" />
           </FormControl>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" mr={3} onClick={onClose}>
-            Cancel
-          </Button>
-          <Button colorScheme="blue" onClick={handleSubmit} isLoading={loading}>
-            Save
-          </Button>
+          <Button variant="ghost" mr={3} onClick={onClose}>Cancel</Button>
+          <Button colorScheme="blue" onClick={handleSubmit} isLoading={loading}> Save</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
