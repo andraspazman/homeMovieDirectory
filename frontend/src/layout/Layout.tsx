@@ -32,10 +32,11 @@ export default function Layout() {
       const response = await axios.get(`https://localhost:7204/check`, {
         withCredentials: true,
       });
-      setUser(response.data);
       console.log("Authentication successful", response.data);
     } catch (error) {
       console.error("Authentication failed", error);
+      // 401 --> set user(null) 
+      setUser(null);
     }
   };
 

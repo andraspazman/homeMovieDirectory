@@ -5,6 +5,8 @@ import MoviePage from "../pages/MoviePage";
 import SeriesPage from "../pages/SeriesPage";
 import SelectedMoviePage from "../pages/SelectedMovieContentPage";
 import SelectedSeriesPage from "../pages/SelectedSeriesContentPage";
+import StatisticsPage from "../pages/StatisticsPage";
+
 
 export default function AppRoutes() {
   return (
@@ -16,6 +18,7 @@ export default function AppRoutes() {
         <Route path="movie/:id" element={< SelectedMoviePage/>} />
         {/* MOD: Dinamikus route a sorozat részletek megjelenítéséhez */}
         <Route path="series/:id" element={<SelectedSeriesPage />} />
+        <Route path="/statistics" element={<StatisticsPage />} />
       </Route>
     </Routes>
   );
