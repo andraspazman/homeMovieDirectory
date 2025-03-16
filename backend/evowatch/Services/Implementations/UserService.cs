@@ -38,6 +38,27 @@ namespace evoWatch.Services.Implementations
             var response = await _userRepository.AddUserAsync(result);
             return UserDTO.CreateFromUserDocument(response);
         }
+        
+        public async Task<UserDTO> AddAdminUserAsync(AddUserDTO user)
+        {
+            HashResult hashResult = _hashService.HashPassword(user.Password);
+
+            var result = new User()
+            {
+                Id = Guid.NewGuid(),
+                Email = user.Email,
+                NormalName = user.NormalName,
+                Nickname = user.Nickname,
+                PasswordHash = hashResult.Hash,
+                PasswordSalt = hashResult.Salt,
+                Role = Database.Enum.UserRole.Admin,
+                IsActive = true,
+
+            };
+            var response = await _userRepository.AddUserAsync(result);
+            return UserDTO.CreateFromUserDocument(response);
+        }
+
         public async Task<UserDTO> GetUserByIdAsync(Guid id)
         {
             var result = await _userRepository.GetUserByIdAsync(id) ?? throw new UserNotFoundException();
@@ -129,6 +150,17 @@ namespace evoWatch.Services.Implementations
         {
             var result = await _userRepository.GetUsersAsync();
             return result.Select(user => UserDTO.CreateFromUserDocument(user));
+        }
+
+        public async Task<bool> DeleteUserAsync(Guid userId)
+        {
+            var user = await _userRepository.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                throw new UserNotFoundException();
+            }
+
+            return await _userRepository.RemoveUserAsync(user);
         }
     }
 }

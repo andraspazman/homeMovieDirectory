@@ -77,5 +77,39 @@ namespace evoWatch.Services.Implementations
                 return null; // Ha a validálás nem sikerül, null értékkel tér vissza
             }
         }
+
+        /// <summary>
+        /// Generates an invalid JWT token for the given user.
+        /// This token is generated with an expiration time in the past, so it is immediately considered expired/invalid.
+        /// </summary>
+        /// <param name="user">The user data for token generation.</param>
+        /// <returns>An invalid JWT token string.</returns>
+        public string GenerateInvalidToken(UserDTO user)
+        {
+            var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]);
+            var issuer = _config["Jwt:Issuer"];
+            var audience = _config["Jwt:Audience"];
+
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role.ToString())
+            };
+
+            var securityKey = new SymmetricSecurityKey(key);
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+     
+            var tokenDescriptor = new JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
+                claims: claims,
+                expires: DateTime.UtcNow.AddSeconds(-1),
+                signingCredentials: credentials
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
+        }
     }
 }
