@@ -99,6 +99,29 @@ namespace evoWatch.Services.Implementations
             return UserDTO.CreateFromUserDocument(result);
         }
 
+        public async Task<UserDTO> UpdateUserStatusAsync(Guid userId, bool isActive, string role)
+        {
+            // Lekérjük a felhasználót az adatbázisból
+            User user = await _userRepository.GetUserByIdAsync(userId)
+                        ?? throw new UserNotFoundException();
+
+            // Próbáljuk meg konvertálni a role string-et a UserRole enum értékére (kis-nagybetű érzéketlen módon)
+            if (!Enum.TryParse<evoWatch.Database.Enum.UserRole>(role, true, out var parsedRole))
+            {
+                throw new ArgumentException("Invalid role value. Allowed values are 'User' or 'Admin'.", nameof(role));
+            }
+
+            // Módosítjuk a kívánt mezőket
+            user.IsActive = isActive;
+            user.Role = parsedRole;
+
+            // Frissítjük az adatbázisban a felhasználót
+            var updatedUser = await _userRepository.ModifyUserAsync(user);
+
+            // Visszaadjuk a DTO-t
+            return UserDTO.CreateFromUserDocument(updatedUser);
+        }
+
         public async Task<FileStream> GetUserProfilePicture(Guid userId)
         {
             User user = await _userRepository.GetUserByIdAsync(userId) ?? throw new UserNotFoundException();
@@ -151,6 +174,8 @@ namespace evoWatch.Services.Implementations
             var result = await _userRepository.GetUsersAsync();
             return result.Select(user => UserDTO.CreateFromUserDocument(user));
         }
+
+
 
         public async Task<bool> DeleteUserAsync(Guid userId)
         {

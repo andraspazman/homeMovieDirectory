@@ -9,6 +9,7 @@ namespace evoWatch.Services
         Task<UserDTO> GetUserByIdAsync(Guid id);
         Task<UserDTO> GetUserByEmailAsync(string email);
         Task<bool> RemoveUserAsync(Guid id, string password);
+        Task<UserDTO> UpdateUserStatusAsync(Guid userId, bool isActive, string role);
         Task<UserDTO> ModifyUserAsync(Guid id, ModifyUserDTO user, string password);
         Task<IEnumerable<UserDTO>> GetUsersAsync();
         Task<FileStream> GetUserProfilePicture(Guid userId);
