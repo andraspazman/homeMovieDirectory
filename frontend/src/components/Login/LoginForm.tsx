@@ -50,12 +50,19 @@ export default function AuthModal({
           ? "Admin"
           : "User";
       
-      const userData = {
+      // Beállítjuk a tokenből kapott alapadatokat
+      const basicUserData = {
+        id: decoded.sub,
         username: decoded.email,
         profilePicture: "",
         role: role,
       };
-      setUser(userData);
+      setUser(basicUserData);
+      
+      // Majd lekérjük a teljes user adatokat, pl. a /users endpoint segítségével
+      const fullUserResponse = await axios.get(`https://localhost:7204/users/${decoded.email}`);
+      setUser(fullUserResponse.data);
+      
       onAuthSuccess();
       onClose();
     } catch (error: unknown) {

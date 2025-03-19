@@ -1,22 +1,24 @@
 import React, { useEffect, useState } from "react";
 import {
   Box,
-  Heading,
   Text,
   Button,
   FormControl,
   FormLabel,
   Input,
   useToast,
+  Image,
+  Flex,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useUser } from "../../context/UserContext";
+import useProfilePicture from "../../hooks/useProfilePicture";
 
 const ProfileSettings: React.FC = () => {
   const { user, setUser } = useUser();
   const toast = useToast();
 
-  // Állapot a megtekintés és szerkesztési módhoz
+  // Állapot a megtekintési és szerkesztési módhoz
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   // Lokális állapot az űrlaphoz
@@ -26,16 +28,36 @@ const ProfileSettings: React.FC = () => {
   const [password, setPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Amikor a komponens betöltődik vagy a user változik,
-  // töltsük be a lokális állapotokat a user adataiból.
-  useEffect(() => {
-    if (user) {
-      setNormalName(user.normalName ?? user.username); // Ha nincs normalName, a username legyen a fallback.
-      setEmail(user.email ?? "");
-      setNickname(user.nickname ?? "");
-    }
-  }, [user]);
+  // Új profilkép fájl állapota
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
+  // A useProfilePicture hook-ot a user.id vagy user.email alapján hívjuk meg
+  const profilePictureUrl = useProfilePicture({
+    id: user?.id,
+    email: user?.email,
+  });
+
+  // A komponens mountolásakor lekérjük a felhasználó adatait egyszer
+  useEffect(() => {
+    if (user && user.email) {
+      axios
+        .get(`https://localhost:7204/users/${user.email}`)
+        .then((response) => {
+          const data = response.data;
+          setUser(data);
+          setNormalName(data.normalName || data.username);
+          setEmail(data.email);
+          setNickname(data.nickname || "");
+        })
+        .catch((error) => {
+          console.error("Error fetching user data:", error);
+        });
+    }
+    // Csak egyszer fusson le
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Szöveges adatok frissítése
   const handleSave = async () => {
     if (!user?.id) return;
     setLoading(true);
@@ -53,7 +75,12 @@ const ProfileSettings: React.FC = () => {
           },
         }
       );
-      setUser(response.data);
+      // Összevonjuk a régi user adatokat a válaszban kapott adatokkal,
+      // így ha a profilePicture mező nem érkezik vissza, megmarad a régi érték.
+      setUser({
+        ...user,
+        ...response.data,
+      });
       toast({
         title: "Profile updated successfully.",
         status: "success",
@@ -75,27 +102,108 @@ const ProfileSettings: React.FC = () => {
     }
   };
 
-  return (
-    <Box p={4}>
-      <Heading mb={4}>Profile Settings</Heading>
-      {user && !isEditing && (
-        <Box mb={4}>
-          <Text>
-            <strong>Name:</strong> {user.normalName ?? user.username}
-          </Text>
-          <Text>
-            <strong>Email:</strong> {user.email}
-          </Text>
-          <Text>
-            <strong>Nickname:</strong> {user.nickname || "-"}
-          </Text>
-          <Button mt={2} colorScheme="blue" onClick={() => setIsEditing(true)}>
-            Edit Profile
-          </Button>
-        </Box>
-      )}
+  // Kezeli a file input változását
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
 
-      {isEditing && (
+  // Feltölti az új profilképet az API segítségével
+  const handlePictureUpload = async () => {
+    if (!user?.id || !selectedFile) return;
+    const formData = new FormData();
+    formData.append("userId", user.id);
+    formData.append("file", selectedFile);
+    try {
+      const response = await axios.put(
+        "https://localhost:7204/users/profile-picture",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      setUser({
+        ...user,
+        ...response.data,
+      });
+      toast({
+        title: "Profile picture updated successfully.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      setSelectedFile(null);
+    } catch (error) {
+      console.error("Error updating profile picture:", error);
+      toast({
+        title: "Error updating profile picture.",
+        description: "Something went wrong. Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  return (
+    <Box
+      p={4}
+      mt="5%"
+      maxW="600px"
+      mx="auto"
+      borderWidth="1px"
+      borderRadius="lg"
+      boxShadow="lg"
+      textAlign="center"
+    >
+      {user && !isEditing ? (
+        <Flex direction="row" align="center" justify="center">
+          {/* Bal oldal: profilkép és feltöltés */}
+          <Flex direction="column" align="center" mr={4}>
+            {profilePictureUrl && (
+              <Image
+                src={profilePictureUrl}
+                alt="Profile Picture"
+                boxSize="150px"
+                objectFit="cover"
+                borderRadius="full"
+              />
+            )}
+            <FormControl mt={2} maxW="300px">
+              <FormLabel>Upload New Profile Picture</FormLabel>
+              <Input type="file" accept="image/*" onChange={handleFileChange} />
+              {selectedFile && (
+                <Button mt={2} colorScheme="teal" onClick={handlePictureUpload}>
+                  Upload Picture
+                </Button>
+              )}
+            </FormControl>
+          </Flex>
+          {/* Jobb oldal: felhasználói adatok */}
+          <Box textAlign="left">
+            <Text>
+              <strong>Name:</strong> {user.normalName || user.username}
+            </Text>
+            <Text>
+              <strong>Email:</strong> {user.email}
+            </Text>
+            <Text>
+              <strong>Nickname:</strong> {user.nickname || "-"}
+            </Text>
+            <Button
+              mt={2}
+              colorScheme="blue"
+              onClick={() => setIsEditing(true)}
+            >
+              Edit Profile Data
+            </Button>
+          </Box>
+        </Flex>
+      ) : (
+        // Szerkesztési mód: csak a szöveges adatok módosítása
         <Box>
           <FormControl mb={3}>
             <FormLabel>Full Name</FormLabel>

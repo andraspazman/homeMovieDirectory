@@ -29,7 +29,6 @@ import {
   Clapperboard,
   LogOut,
   Settings,
-  UserRoundPen,
   UserCog,
   BarChart2,
 } from "lucide-react";
@@ -41,8 +40,6 @@ import { SearchResultDTO } from "../../types/SearchResultDTO";
 import { NavBarProps } from "../../interfaces/INavBarProps";
 
 const NavBar: FunctionComponent<NavBarProps> = ({
-  onSettingsClick,
-  onEditProfileClick,
   toggleSidebar,
   onLoginClick,
   onAddMediaClick,
@@ -245,13 +242,6 @@ const NavBar: FunctionComponent<NavBarProps> = ({
                     >
                       <Settings /> Settings
                     </MenuItem>
-                    <MenuItem
-                      bg="gray.800"
-                      className={styles.myMenuItem}
-                      onClick={onEditProfileClick}
-                    >
-                      <UserRoundPen /> Edit Profile Picture
-                    </MenuItem>
                     <Divider />
                     <MenuItem
                       bg="gray.800"
@@ -263,7 +253,7 @@ const NavBar: FunctionComponent<NavBarProps> = ({
                   </MenuList>
                 </Menu>
                 <Text ml={1} mr={5}>
-                  {user.username}
+                  {user.nickname}
                 </Text>
               </>
             ) : (

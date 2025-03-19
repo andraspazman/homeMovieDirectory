@@ -11,9 +11,11 @@ export default function ProfileLoader() {
       .then((response) => {
         console.log("Profile response:", response.data);
         setUser({
-          username: response.data.email,
+          email: response.data.email,
           profilePicture: "",
           role: response.data.role === "Admin" ? "Admin" : "User",
+          id: "",
+          username: ""
         });
       })
       .catch((err) => {
