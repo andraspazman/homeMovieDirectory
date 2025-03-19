@@ -1,4 +1,4 @@
-import  { FunctionComponent, useState, useEffect, useRef } from "react";
+import { FunctionComponent, useState, useEffect, useRef } from "react";
 import {
   Box,
   Flex,
@@ -85,7 +85,6 @@ const NavBar: FunctionComponent<NavBarProps> = ({
     return () => clearTimeout(timer);
   }, [searchQuery, onClose]);
 
-
   const handleLogout = async () => {
     try {
       await logout();
@@ -97,7 +96,6 @@ const NavBar: FunctionComponent<NavBarProps> = ({
   return (
     <Box className={styles.navBar}>
       <Flex className={styles.navBarFlex}>
-
         <Flex className={styles.leftSection}>
           <IconButton
             icon={<HamburgerIcon />}
@@ -111,7 +109,6 @@ const NavBar: FunctionComponent<NavBarProps> = ({
             homeFlix
           </Text>
         </Flex>
-
 
         <Flex className={styles.centerSection} justifyContent="center">
           <Popover
@@ -186,81 +183,102 @@ const NavBar: FunctionComponent<NavBarProps> = ({
         </Flex>
 
         {/* Jobb oldali rész: Felhasználói menü, login, stb. */}
-        <Flex className={styles.rightSection} alignItems="center"  w="40%" p="0%" justifyContent={user ? "flex-start" : "flex-end"}>
-              {user ? (
-                <>
-                  {/* Ha van user, mehet minden a bal oldalra (flex-start) és a Spacer beállítja a távolságot */}
-                  <Flex alignItems="center" mr={1} justifyContent="flex-start">
+        <Flex className={styles.rightSection} alignItems="center" w="35%" >
+            {user && isAdmin && (
+              <Flex alignItems="center" mr={1}>
+                <Button
+                  variant="ghost"
+                  color="red"
+                  leftIcon={<BarChart2 />}
+                  onClick={() => navigate("/statistics")}
+                >
+                  Statistics
+                </Button>
+                <Button
+                  variant="ghost"
+                  color="red"
+                  leftIcon={<UserCog />}
+                  onClick={() => navigate("/manage-users")}
+                >
+                  Manage Users
+                </Button>
+                <Button
+                  onClick={onAddMediaClick}
+                  variant="ghost"
+                  color="white"
+                  leftIcon={<Clapperboard />}
+                >
+                  Add media
+                </Button>
+              </Flex>
+            )}
+
+            <Spacer />
+
+            {user && !isAdmin && (
               <Button
                 onClick={onAddMediaClick}
                 variant="ghost"
                 color="white"
                 leftIcon={<Clapperboard />}
+                mr={5}
               >
                 Add media
               </Button>
+            )}
 
-              {isAdmin && (
-                <>
-                  <Button
-                    variant="ghost"
-                    color="red"
-                    leftIcon={<BarChart2 />}
-                    onClick={() => navigate("/statistics")}
-                  >
-                    Statistics
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    color="red"
-                    leftIcon={<UserCog />}
-                  >
-                Manage Users
-      </Button>
-    </>
-  )}
-</Flex>
-      <Spacer />
-      <Menu>
-        <MenuButton
-          as={Avatar}
-          size="sm"
-          cursor="pointer"
-          bg="gray.600"
-          src={user.profilePicture}
-        />
-        <MenuList bg="gray.800" className={styles.myMenuList}>
-          <MenuItem bg="gray.800" className={styles.myMenuItem} onClick={onSettingsClick}>
-            <Settings /> Settings
-          </MenuItem>
-          <MenuItem bg="gray.800" className={styles.myMenuItem} onClick={onEditProfileClick}>
-            <UserRoundPen /> Edit Profile Picture
-          </MenuItem>
-          <Divider />
-          <MenuItem bg="gray.800" className={styles.myMenuItem} onClick={handleLogout}>
-            <LogOut /> Log out
-          </MenuItem>
-        </MenuList>
-      </Menu>
-      <Text ml={1} mr={5}>
-        {user.username}
-      </Text>
-    </>
-  ) : (
-    // Ha nincs user, a login gombot a jobb szélre igazítjuk 
-    <Button
-      onClick={onLoginClick}
-      className={styles.loginButton}
-      variant="ghost"
-      color="white"
-      leftIcon={<CircleUserRound />}
-      mr="5%"
-    >
-      Login
-    </Button>
-  )}
-</Flex>
+            {user ? (
+              <>
+                <Menu>
+                  <MenuButton
+                    as={Avatar}
+                    size="sm"
+                    cursor="pointer"
+                    bg="gray.600"
+                    src={user.profilePicture}
+                  />
+                  <MenuList bg="gray.800" className={styles.myMenuList}>
+                    <MenuItem
+                      bg="gray.800"
+                      className={styles.myMenuItem}
+                      onClick={() => navigate("/profile-settings")}
+                    >
+                      <Settings /> Settings
+                    </MenuItem>
+                    <MenuItem
+                      bg="gray.800"
+                      className={styles.myMenuItem}
+                      onClick={onEditProfileClick}
+                    >
+                      <UserRoundPen /> Edit Profile Picture
+                    </MenuItem>
+                    <Divider />
+                    <MenuItem
+                      bg="gray.800"
+                      className={styles.myMenuItem}
+                      onClick={handleLogout}
+                    >
+                      <LogOut /> Log out
+                    </MenuItem>
+                  </MenuList>
+                </Menu>
+                <Text ml={1} mr={5}>
+                  {user.username}
+                </Text>
+              </>
+            ) : (
+              <Button
+                onClick={onLoginClick}
+                className={styles.loginButton}
+                variant="ghost"
+                color="white"
+                leftIcon={<CircleUserRound />}
+                mr="5%"
+              >
+                Login
+              </Button>
+            )}
+          </Flex>
       </Flex>
     </Box>
   );
