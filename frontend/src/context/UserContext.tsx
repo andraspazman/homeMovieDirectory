@@ -25,7 +25,6 @@ export const UserProvider = ({ children }: UserProviderProps) => {
 
   const logout = async () => {
     try {
-      // A backend logout végpont meghívása
       await axios.post("https://localhost:7204/logout");
       setUser(null);
       console.error("Logout succes:");
