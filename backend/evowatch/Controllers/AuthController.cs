@@ -44,7 +44,7 @@ namespace evoWatch.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO loginDto)
         {
-            // Attempt to retrieve the user from the database by email.
+            // Felhasználó lekérése az email alapján
             var user = await _userRepository.GetUserByEmailAsync(loginDto.Email);
             if (user == null)
             {
@@ -52,19 +52,23 @@ namespace evoWatch.Controllers
                 return Unauthorized(new { message = "Invalid credentials" });
             }
 
-            // Verify the password using the hash and salt stored in the database.
+            // Ellenőrizzük, hogy a felhasználó aktív-e
+            if (!user.IsActive)
+            {
+                _logger.LogWarning("Login failed for email: {Email}. User is inactive.", loginDto.Email);
+                return Unauthorized(new { message = "User account is inactive" });
+            }
+
+            // Jelszó ellenőrzése
             if (!_hashService.VerifyPassword(loginDto.Password, user.PasswordHash, user.PasswordSalt))
             {
                 _logger.LogWarning("Login failed for email: {Email}. Invalid password.", loginDto.Email);
                 return Unauthorized(new { message = "Invalid credentials" });
             }
 
-            // Convert the user to a UserDTO for token generation purposes.
+            // JWT token generálása és beállítása
             var userDto = UserDTO.CreateFromUserDocument(user);
-            // Generate a JWT token for this user.
             var token = _jwtService.GenerateToken(userDto);
-
-            // Store the generated token in an HttpOnly cookie.
             Response.Cookies.Append("jwt", token, new CookieOptions
             {
                 HttpOnly = true,
@@ -72,12 +76,10 @@ namespace evoWatch.Controllers
                 SameSite = SameSiteMode.None,
                 Path = "/",
                 Expires = DateTime.UtcNow.AddHours(1),
-                Domain = "localhost" //-> Csak akkor, ha mindenhol ezt adod meg
+                Domain = "localhost"
             });
 
             _logger.LogInformation("Login successful for email: {Email}. Token generated.", loginDto.Email);
-
-            // Optionally return the token in the response body if needed
             return Ok(new { message = "Login successful", token });
         }
 
