@@ -1,5 +1,4 @@
-// Sidebar.tsx
-import { FunctionComponent } from "react";
+import { FunctionComponent, useState } from "react";
 import {
   Box,
   Flex,
@@ -10,8 +9,8 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { Film, MonitorPlay, House, CirclePlay } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Film, MonitorPlay, House, CirclePlay } from "lucide-react"; // Ikonok importálása
 import styles from "./Sidebar.module.scss";
 import { SidebarProps } from "../../interfaces/IsidebarProps.types";
 
@@ -19,9 +18,20 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
   isOpen,
   selectedGenres,
   setSelectedGenres,
-  selectedCountries,
-  setSelectedCountries,
+  selectedDecades,
+  setSelectedDecades,
 }) => {
+  
+  const highestDecade = 2025; // Fix érték, de szükség esetén dinamikus is lehet
+  const decadeOptions = [];
+  for (let start = highestDecade; start > 2000; start -= 5) {
+    let end = start - 5 + 1;
+    if (start === 2005) {
+      end = 2000;
+    }
+    decadeOptions.push(`${start}-${end}`);
+  }
+
   return (
     <Box
       className={`${styles.sidebar} ${
@@ -29,60 +39,52 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
       }`}
     >
       {isOpen && (
-        <Flex className={styles.sidebarFlex}>
-          {/* Home gomb */}
+        <Flex className={styles.sidebarFlex} direction="column">
+          {/* Gombok ikonokkal */}
           <Button
             as={Link}
             to="/"
             className={styles.sidebarButton}
             variant="ghost"
             color="white"
-            leftIcon={<House />}
+            leftIcon={<House size={20} />}
           >
             Home
           </Button>
-
-          {/* Series gomb */}
           <Button
             as={Link}
             to="/series"
             className={styles.sidebarButton}
             variant="ghost"
             color="white"
-            leftIcon={<MonitorPlay />}
+            leftIcon={<MonitorPlay size={20} />}
           >
             Series
           </Button>
-
-          {/* Movies gomb */}
           <Button
             as={Link}
             to="/movies"
             className={styles.sidebarButton}
             variant="ghost"
             color="white"
-            leftIcon={<Film />}
+            leftIcon={<Film size={20} />}
           >
             Movies
           </Button>
-
           <Divider my={4} borderColor="gray.600" />
-
-          {/* Playlist gomb */}
           <Button
             as={Link}
             to="/playlist"
             className={styles.sidebarButton}
             variant="ghost"
             color="white"
-            leftIcon={<CirclePlay />}
+            leftIcon={<CirclePlay size={20} />}
           >
             Playlist
           </Button>
-
           <Divider my={4} borderColor="gray.600" />
 
-          {/* GENRE-szűrők: csak akkor rendereljük, ha van selectedGenres és setSelectedGenres */}
+          {/* GENRE-szűrők */}
           {selectedGenres && setSelectedGenres && (
             <Box className={styles.chechboxgroup}>
               <Text className={styles.text}>Genre</Text>
@@ -113,32 +115,22 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
             </Box>
           )}
 
-          {/* COUNTRY-szűrők: csak akkor rendereljük, ha van selectedCountries és setSelectedCountries */}
-          {selectedCountries && setSelectedCountries && (
+          {/* DECade-szűrők */}
+          {selectedDecades && setSelectedDecades && (
             <Box className={styles.chechboxgroup}>
-              <Text className={styles.text}>Country</Text>
+              <Text className={styles.text}>Decade</Text>
               <CheckboxGroup
-                value={selectedCountries}
+                value={selectedDecades}
                 onChange={(values: (string | number)[]) =>
-                  setSelectedCountries(values as string[])
+                  setSelectedDecades(values as string[])
                 }
               >
                 <Stack className={styles.stack}>
-                  <Checkbox className={styles.checkbox} value="Hungary">
-                    Hungary
-                  </Checkbox>
-                  <Checkbox className={styles.checkbox} value="Germany">
-                    Germany
-                  </Checkbox>
-                  <Checkbox className={styles.checkbox} value="USA">
-                    USA
-                  </Checkbox>
-                  <Checkbox className={styles.checkbox} value="China">
-                    China
-                  </Checkbox>
-                  <Checkbox className={styles.checkbox} value="UK">
-                    UK
-                  </Checkbox>
+                  {decadeOptions.map((decade) => (
+                    <Checkbox key={decade} className={styles.checkbox} value={decade}>
+                      {decade}
+                    </Checkbox>
+                  ))}
                 </Stack>
               </CheckboxGroup>
             </Box>

@@ -11,6 +11,8 @@ import {
   FormControl,
   FormLabel,
   Input,
+  Progress,
+  Textarea,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { EpisodeDTO } from "../../types/EpisodeDTO";
@@ -28,14 +30,15 @@ export const EditEpisodeModal: React.FC<EditEpisodeModalProps> = ({
   episode,
   onEpisodeUpdated,
 }) => {
-  // Az űrlapmezők állapota: epizód címe és opcionális videofájl
   const [title, setTitle] = useState(episode.title);
   const [file, setFile] = useState<File | null>(null);
+  // Új state a feltöltési előrehaladás nyomon követésére
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
 
-  // Amikor az episode prop változik, frissítjük az űrlap értékét
   useEffect(() => {
     setTitle(episode.title);
     setFile(null);
+    setUploadProgress(0);
   }, [episode]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,7 +49,6 @@ export const EditEpisodeModal: React.FC<EditEpisodeModalProps> = ({
 
   const handleUpdate = async () => {
     try {
-      // Készítünk egy FormData objektumot a videofájl és a többi mező elküldéséhez
       const formData = new FormData();
       formData.append("Title", title);
       // Az isMovie értékét mindig false-ra állítjuk
@@ -55,14 +57,19 @@ export const EditEpisodeModal: React.FC<EditEpisodeModalProps> = ({
         formData.append("newVideoFile", file);
       }
 
-      // PUT kérés a /episode/{id} végpontra
       const response = await axios.put<EpisodeDTO>(
         `https://localhost:7204/episode/${episode.id}`,
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          onUploadProgress: (progressEvent) => {
+            const total = progressEvent.total ?? 1;
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / total);
+            setUploadProgress(percentCompleted);
+          },
+        }
       );
 
-      // Sikeres frissítés után értesítjük a parent komponensét
       onEpisodeUpdated(response.data);
       onClose();
     } catch (error) {
@@ -79,15 +86,15 @@ export const EditEpisodeModal: React.FC<EditEpisodeModalProps> = ({
         <ModalBody>
           <FormControl mb={3}>
             <FormLabel>Title</FormLabel>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} />
           </FormControl>
-          <FormControl>
+          <FormControl mb={3}>
             <FormLabel>Video File</FormLabel>
-            <Input type="file" onChange={handleFileChange} />
+            <Input type="file" accept="video/mp4,video/*" onChange={handleFileChange} />
           </FormControl>
+          {file && uploadProgress > 0 && uploadProgress < 100 && (
+            <Progress value={uploadProgress} size="sm" colorScheme="blue" mb={3} />
+          )}
         </ModalBody>
         <ModalFooter>
           <Button colorScheme="blue" onClick={handleUpdate}>

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useLocation, useNavigate } from "react-router-dom"; //MOD: Importáljuk a useNavigate hookot
+import { useLocation, useNavigate } from "react-router-dom"; // useNavigate importálása
 import { 
   SimpleGrid, Box, Image, Text, Skeleton, SkeletonText, GridItem, 
-  Flex, HStack, Select, Button 
+  Flex, HStack, Select, Button, Heading 
 } from "@chakra-ui/react";
 import styles from "./Contentpane.module.scss";
 
@@ -22,18 +22,18 @@ interface Item {
 interface ContentPaneProps {
   selectedGenres: string[];
   selectedCountries: string[];
+  selectedDecades: string[];  // Új prop: kiválasztott évtizedek
 }
 
-const ContentPane = ({ selectedGenres, selectedCountries }: ContentPaneProps) => {
+const ContentPane = ({ selectedGenres, selectedCountries, selectedDecades }: ContentPaneProps) => {
   const location = useLocation();
-  const navigate = useNavigate(); //MOD: Inicializáljuk a useNavigate hookot
+  const navigate = useNavigate(); // useNavigate inicializálása
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
 
-  // Új szűrési állapotok
+  // Új szűrési állapotok a ContentPane-ben (plusz nyelv és műfaj szűrés)
   const [filterLanguage, setFilterLanguage] = useState<string>("");
-  const [filterYear, setFilterYear] = useState<string>("");
   const [filterGenre, setFilterGenre] = useState<string>("");
   const [orderBy, setOrderBy] = useState<string>("desc"); // Alapértelmezett: év csökkenő
 
@@ -66,7 +66,7 @@ const ContentPane = ({ selectedGenres, selectedCountries }: ContentPaneProps) =>
       });
   }, [endpoint]);
 
-  // Szűrés: az eredeti szűrés mellett az új mezők is érvényesülnek
+  // Szűrés: a genre, language, country szűrők mellett bevezetjük a decade szűrést
   const filteredItems = items.filter((item) => {
     const genreMatch =
       (selectedGenres.length === 0 || selectedGenres.includes(item.genre)) &&
@@ -75,14 +75,19 @@ const ContentPane = ({ selectedGenres, selectedCountries }: ContentPaneProps) =>
       selectedCountries.length === 0 || selectedCountries.includes(item.description);
     const languageMatch =
       filterLanguage === "" || item.language === filterLanguage;
-    const yearMatch =
-      filterYear === "" || String(item.releaseYear) === filterYear;
-  
-    // Ha a jelenlegi oldal movies, akkor csak azokat az elemeket tartjuk meg, ahol isMovie true
+    const decadeMatch =
+      // Ha nincs kiválasztott évtized, akkor minden elem bekerül
+      selectedDecades.length === 0 ||
+      // Ellenőrizzük, hogy az item.releaseYear beleesik-e valamelyik kiválasztott intervallumba
+      selectedDecades.some((decadeRange) => {
+        const [upper, lower] = decadeRange.split('-').map(Number);
+        return item.releaseYear <= upper && item.releaseYear >= lower;
+      });
+
     if (location.pathname.includes("movies")) {
-      return item.isMovie === true && genreMatch && countryMatch && languageMatch && yearMatch;
+      return item.isMovie === true && genreMatch && countryMatch && languageMatch && decadeMatch;
     }
-    return genreMatch && countryMatch && languageMatch && yearMatch;
+    return genreMatch && countryMatch && languageMatch && decadeMatch;
   });
 
   // Rendezés az év alapján: csökkenő vagy növekvő sorrendben
@@ -116,7 +121,7 @@ const ContentPane = ({ selectedGenres, selectedCountries }: ContentPaneProps) =>
     return <Text color="red.500">{error}</Text>;
   }
 
-  //MOD: Meghatározzuk, hogy a részletes oldal melyik prefix-et használja (movie vagy series)
+  // Meghatározzuk a részletes oldal prefixét
   const detailRoutePrefix = location.pathname.includes("movies") ? "/movie" : "/series";
 
   return (
@@ -133,17 +138,6 @@ const ContentPane = ({ selectedGenres, selectedCountries }: ContentPaneProps) =>
             <option value="hungarian">Hungarian</option>
             <option value="french">French</option>
             <option value="spanish">Spanish</option>
-            {/* További nyelvek, ha szükséges */}
-          </Select>
-          <Select 
-            placeholder="Year" 
-            value={filterYear} 
-            onChange={(e) => setFilterYear(e.target.value)}
-          >
-            <option value="2023">2023</option>
-            <option value="2022">2022</option>
-            <option value="2021">2021</option>
-            {/* További évek */}
           </Select>
           <Select 
             placeholder="Genre" 
@@ -153,7 +147,6 @@ const ContentPane = ({ selectedGenres, selectedCountries }: ContentPaneProps) =>
             <option value="action">Action</option>
             <option value="Comedy">Comedy</option>
             <option value="drama">Drama</option>
-            {/* További műfajok */}
           </Select>
           <Select 
             placeholder="Order by Year" 
@@ -169,12 +162,11 @@ const ContentPane = ({ selectedGenres, selectedCountries }: ContentPaneProps) =>
       {/* Grid megjelenítés */}
       <SimpleGrid rowGap={0} spacing={5} columns={[5]} className={styles.grid}>
         {currentItems.map((item) => (
-          //MOD: A grid elemre kattintva navigálunk a részletes oldalra
           <GridItem 
             key={item.id} 
             className={styles.gridItem} 
-            onClick={() => navigate(`${detailRoutePrefix}/${item.id}`)} //MOD: Navigáció a megfelelő oldalra
-            cursor="pointer" //MOD: Mutatja, hogy az elem kattintható
+            onClick={() => navigate(`${detailRoutePrefix}/${item.id}`)}
+            cursor="pointer"
           >
             <Image
               src={`https://localhost:7204/images/${item.coverImagePath}`}
