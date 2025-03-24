@@ -73,7 +73,7 @@ namespace evoWatch.Services.Implementations
             return result.Select(x => SeriesDTO.CreateFromSeriesDocument(x));
         }
 
-        public async Task<SeriesDTO> UpdateSeriesAsync(Guid id, SeriesDTO series)
+        public async Task<SeriesDTO> UpdateSeriesAsync(Guid id, SeriesDTO series, IFormFile? coverImage)
         {
             var existingSeries = await _seriesRepository.GetSeriesByIdAsync(id) ?? throw new SeriesNotFoundException();
 
@@ -83,6 +83,11 @@ namespace evoWatch.Services.Implementations
             existingSeries.FinalYear = series.FinalYear;
             existingSeries.Description = series.Description;
 
+            if (coverImage != null && coverImage.Length > 0)
+            {
+                // Ha szükséges, itt törölheted a korábbi képet, mielőtt felülírnád.
+                existingSeries.CoverImagePath = await _fileService.SaveFileAsync(coverImage);
+            }
 
             var result = await _seriesRepository.UpdateSeriesAsync(existingSeries);
             return SeriesDTO.CreateFromSeriesDocument(result);

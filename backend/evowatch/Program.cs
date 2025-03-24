@@ -10,6 +10,10 @@ using System.Reflection;
 using evoWatch.Database.Repositories;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.FileProviders;
+using System.IdentityModel.Tokens.Jwt;
+
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 
 var exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 Directory.SetCurrentDirectory(exeDir);

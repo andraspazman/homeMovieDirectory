@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useToast } from "@chakra-ui/react";
 import * as api from "../../utils/ApiClient";
-import {Flex,Box,Image,Text,Spinner,Heading,Button,Modal, ModalOverlay,ModalContent,ModalHeader,ModalCloseButton,ModalBody,ModalFooter,useDisclosure,} from "@chakra-ui/react";
+import {Flex,Box,Image,Text,Spinner,Heading,Button,Modal, ModalOverlay,ModalContent,ModalHeader,ModalCloseButton,ModalBody,useDisclosure,} from "@chakra-ui/react";
 import { FilePenLine } from "lucide-react";
 import styles from "./SelectedContentpane.module.scss";
 import { SeriesDTO } from "../../types/SeriesDTO";
@@ -12,7 +13,7 @@ import { EditEpisodeModal } from "../SelectedContentForms/EditEpisodeModal";
 import { EditSeasonModal } from "../SelectedContentForms/EditSeasonModal";
 import EditProductionCompanyModal from "../SelectedContentForms/EditProductionCompanyModal";
 import { AddEpisodeModal } from "../AddContent/AddEpisodeForm";
-import { AddPersonModal } from "../../components/AddContent/AddPersonModal";
+import { AddPersonModal } from "../AddContent/AddPersonForm";
 import { useUser } from "../../context/UserContext";
 import { useSeriesData } from "../../hooks/useSeriesData";
 import { useEpisodeDetails } from "../../hooks/useEpisodeDetails";
@@ -22,13 +23,14 @@ import { PersonWithCharacterDTO } from "../../types/PersonWithCharacterDTO";
 import { SeriesEpisodes } from "../SelectedContent/SeriesWithEpisodes";
 import ProductionCompany from "../SelectedContent/ProductionCompany";
 import { ProductionCompanyDTO } from "../../types/ProductionCompanyDTO";
-import AddProductionCompanyModal from "../AddContent/AddProductionCompanyModal";
+import AddProductionCompanyModal from "../AddContent/AddProductionCompanyForm";
 
 const SelectedSeriesContentPane = () => {
   const { id } = useParams();
   const { item, setItem, episodeId, seasonsWithEpisodes, setSeasonsWithEpisodes, loading, error } = useSeriesData(id!);
   const { personsWithCharacters, productionCompany: fetchedProductionCompany } = useEpisodeDetails(episodeId);
   const { user } = useUser();
+  const toast = useToast();
   const isLoggedIn = !!user;
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedVideoPath, setSelectedVideoPath] = useState<string>("");
@@ -45,6 +47,21 @@ const SelectedSeriesContentPane = () => {
   // Állapot az Add Production Company modal számára
   const [isAddProductionCompanyOpen, setIsAddProductionCompanyOpen] = useState(false);
   const openAddProductionCompany = () => setIsAddProductionCompanyOpen(true);
+  const handleAddProductionCompany = () => {
+    // If EP1 does not exist
+    if (!episodeId) {
+      toast({
+        title: "No EP1 episode found",
+        description: "Please add EP1 before adding a production company.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    openAddProductionCompany();
+  };
+  
   const closeAddProductionCompany = () => setIsAddProductionCompanyOpen(false);
 
   // Állapot az Edit Production Company modal számára
@@ -155,6 +172,16 @@ const SelectedSeriesContentPane = () => {
   };
 
   const handleAddPerson = () => {
+    if (!episodeId) {
+      toast({
+        title: "No EP1 episode found",
+        description: "Please add EP1 before adding a person.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
     setSelectedEpisodeForPerson(episodeId);
     setIsAddPersonModalOpen(true);
   };
@@ -217,7 +244,7 @@ const SelectedSeriesContentPane = () => {
             website={localProductionCompany ? localProductionCompany.website : undefined}
             isLoggedIn={isLoggedIn}
             onEdit={openEditProductionCompany}
-            onAdd={openAddProductionCompany}
+            onAdd={handleAddProductionCompany}
           />
         </Box>
           <DirectorsAndCharacters
@@ -229,83 +256,62 @@ const SelectedSeriesContentPane = () => {
             onAddPerson={handleAddPerson}
           />
       </Flex>
-      <Box className={styles.lowerSection}>
-        <SeriesEpisodes
-          seasonsWithEpisodes={seasonsWithEpisodes}
-          isLoggedIn={isLoggedIn}
-          onAddSeason={openAddSeasonModal}
-          onAddEpisode={handleAddEpisode}
-          onEditEpisode={handleEditEpisode}
-          onDeleteEpisode={handleDeleteEpisode}
-          onEditSeason={handleEditSeason}
-          onDeleteSeason={handleDeleteSeason}
-          onWatchNow={handleWatchNow}
-        />
-        <Modal isOpen={isOpen} onClose={onClose} isCentered size="xl">
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>{item.title}</ModalHeader>
-            <ModalCloseButton />
-            <ModalBody>
-              {selectedVideoPath ? (
-                <video width="100%" height="auto" controls><source src={selectedVideoPath} type="video/mp4" />Your browser does not support video playback.</video>
-              ) : (
-                <Text>No video available.</Text>
-              )}
-            </ModalBody>
-            <ModalFooter>{/* Optionally extra controls */}</ModalFooter>
-          </ModalContent>
-        </Modal>
+          <Box className={styles.lowerSection}>
+            <SeriesEpisodes
+              seasonsWithEpisodes={seasonsWithEpisodes}
+              isLoggedIn={isLoggedIn}
+              onAddSeason={openAddSeasonModal}
+              onAddEpisode={handleAddEpisode}
+              onEditEpisode={handleEditEpisode}
+              onDeleteEpisode={handleDeleteEpisode}
+              onEditSeason={handleEditSeason} onDeleteSeason={handleDeleteSeason} onWatchNow={handleWatchNow}
+            />
+            <Modal isOpen={isOpen} onClose={onClose} isCentered size="xl">
+              <ModalOverlay />
+              <ModalContent>
+                <ModalHeader>{item.title}</ModalHeader>
+                <ModalCloseButton />
+                <ModalBody>
+                  {selectedVideoPath ? (
+                    <video width="100%" height="auto" controls><source src={selectedVideoPath} type="video/mp4" />Your browser does not support video playback.</video>
+                  ) : (
+                    <Text>No video available.</Text>
+                  )}
+                </ModalBody>
+              </ModalContent>
+            </Modal>
       </Box>
       {isEditSeriesOpen && editSeriesData && (
-        <EditSeriesModal
-          isOpen={isEditSeriesOpen}
-          onClose={closeEditSeries}
-          series={editSeriesData}
-          onSeriesUpdated={(updatedSeries) => setItem(updatedSeries)}
-        />
+        <EditSeriesModal isOpen={isEditSeriesOpen} onClose={closeEditSeries} series={editSeriesData} onSeriesUpdated={(updatedSeries) => setItem(updatedSeries)} />
       )}
+
       {isAddSeasonOpen && item && (
-        <AddSeasonModal
-          isOpen={isAddSeasonOpen}
-          onClose={closeAddSeasonModal}
-          seriesId={item.id}
-          onSeasonAdded={handleSeasonAdded}
-        />
+        <AddSeasonModal isOpen={isAddSeasonOpen} onClose={closeAddSeasonModal} seriesId={item.id} onSeasonAdded={handleSeasonAdded}/>
       )}
+
       {isEditEpisodeModalOpen && selectedEpisode && (
-        <EditEpisodeModal
-          isOpen={isEditEpisodeModalOpen}
-          onClose={() => setIsEditEpisodeModalOpen(false)}
-          episode={selectedEpisode}
+        <EditEpisodeModal isOpen={isEditEpisodeModalOpen} onClose={() => setIsEditEpisodeModalOpen(false)} episode={selectedEpisode}
           onEpisodeUpdated={(updatedEpisode) => {
             console.log("Episode updated:", updatedEpisode);
             setIsEditEpisodeModalOpen(false);
           }}
         />
       )}
+
       {isAddEpisodeModalOpen && selectedSeasonForEpisode && (
-        <AddEpisodeModal
-          isOpen={isAddEpisodeModalOpen}
-          onClose={() => setIsAddEpisodeModalOpen(false)}
-          seasonId={selectedSeasonForEpisode}
+        <AddEpisodeModal isOpen={isAddEpisodeModalOpen} onClose={() => setIsAddEpisodeModalOpen(false)} seasonId={selectedSeasonForEpisode}
           onEpisodeAdded={(newEpisode: EpisodeDTO) => {
             setSeasonsWithEpisodes((prev) =>
               prev.map((entry) =>
-                entry.season.id === selectedSeasonForEpisode
-                  ? { season: entry.season, episodes: [...entry.episodes, newEpisode] }
-                  : entry
+                entry.season.id === selectedSeasonForEpisode ? { season: entry.season, episodes: [...entry.episodes, newEpisode] }: entry
               )
             );
-            // Eltávolítjuk a refetch hívást, mert már frissítettük a seasonsWithEpisodes állapotot.
           }}
         />
       )}
+
       {isEditSeasonModalOpen && selectedSeason && (
-        <EditSeasonModal
-          isOpen={isEditSeasonModalOpen}
-          onClose={() => setIsEditSeasonModalOpen(false)}
-          season={selectedSeason}
+        <EditSeasonModal isOpen={isEditSeasonModalOpen}  onClose={() => setIsEditSeasonModalOpen(false)} season={selectedSeason}
           onSeasonUpdated={(updatedSeason) => {
             setSeasonsWithEpisodes((prev) =>
               prev.map((entry) =>
@@ -317,10 +323,7 @@ const SelectedSeriesContentPane = () => {
         />
       )}
       {isAddPersonModalOpen && selectedEpisodeForPerson && (
-        <AddPersonModal
-          isOpen={isAddPersonModalOpen}
-          onClose={() => setIsAddPersonModalOpen(false)}
-          episodeId={selectedEpisodeForPerson}
+        <AddPersonModal isOpen={isAddPersonModalOpen} onClose={() => setIsAddPersonModalOpen(false)} episodeId={selectedEpisodeForPerson}
           onPersonAdded={(newPerson) => {
             console.log("New person added:", newPerson);
             setLocalPersons((prev) => [...prev, { person: newPerson, characters: [] }]);
@@ -329,17 +332,12 @@ const SelectedSeriesContentPane = () => {
         />
       )}
       {isAddCharacterModalOpen && selectedPersonIdForCharacter && episodeId && (
-        <AddCharacterModal
-          isOpen={isAddCharacterModalOpen}
-          onClose={() => setIsAddCharacterModalOpen(false)}
-          episodeId={episodeId}
+        <AddCharacterModal isOpen={isAddCharacterModalOpen} onClose={() => setIsAddCharacterModalOpen(false)} episodeId={episodeId}
           personId={selectedPersonIdForCharacter}
           onCharacterAdded={(newCharacter) => {
             setLocalPersons((prev) =>
               prev.map((p) =>
-                p.person.id === selectedPersonIdForCharacter
-                  ? { ...p, characters: p.characters ? [...p.characters, newCharacter] : [newCharacter] }
-                  : p
+                p.person.id === selectedPersonIdForCharacter ? { ...p, characters: p.characters ? [...p.characters, newCharacter] : [newCharacter] } : p
               )
             );
             setIsAddCharacterModalOpen(false);
@@ -347,22 +345,15 @@ const SelectedSeriesContentPane = () => {
         />
       )}
       {isEditProductionCompanyOpen && localProductionCompany && (
-        <EditProductionCompanyModal
-          isOpen={isEditProductionCompanyOpen}
-          onClose={closeEditProductionCompany}
-          productionCompany={localProductionCompany}
+        <EditProductionCompanyModal isOpen={isEditProductionCompanyOpen}  onClose={closeEditProductionCompany}  productionCompany={localProductionCompany}
           onProductionCompanyUpdated={(updatedCompany) => {
-            setLocalProductionCompany(updatedCompany);
-            // Ha szükséges, frissítheted az item productionCompany értékét is:
-            // setItem({ ...item, productionCompany: updatedCompany } as SeriesDTO & { productionCompany: ProductionCompanyDTO });
+            setLocalProductionCompany(updatedCompany);     
+            setItem({ ...item, productionCompany: updatedCompany } as SeriesDTO & { productionCompany: ProductionCompanyDTO });
           }}
         />
       )}
       {isAddProductionCompanyOpen && (
-        <AddProductionCompanyModal
-          isOpen={isAddProductionCompanyOpen}
-          onClose={closeAddProductionCompany}
-          episodeId={episodeId!}
+        <AddProductionCompanyModal isOpen={isAddProductionCompanyOpen} onClose={closeAddProductionCompany}  episodeId={episodeId!}
           onProductionCompanyAdded={(newCompany) => {
             setLocalProductionCompany(newCompany);
             setItem({ ...item, productionCompany: newCompany } as SeriesDTO & { productionCompany: ProductionCompanyDTO });

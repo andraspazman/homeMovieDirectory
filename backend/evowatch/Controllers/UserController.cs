@@ -33,6 +33,22 @@ namespace evoWatch.Controllers
             return Ok(result);
         }
 
+
+        /// <summary> 
+        /// Registers user
+        /// </summary>
+        /// <param name="user">User to register</param>
+        /// <response code="200">User was successfully registered</response>
+        [HttpPost("admin/register", Name = nameof(AddAdminUser))]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(UserDTO), StatusCodes.Status200OK)]
+        public async Task<IActionResult> AddAdminUser([FromBody] AddUserDTO user)
+        {
+            var result = await _userService.AddAdminUserAsync(user);
+            return Ok(result);
+        }
+        
+
         /// <summary>
         /// Deletes user 
         /// </summary>
@@ -139,6 +155,40 @@ namespace evoWatch.Controllers
         }
 
         /// <summary>
+        /// Updates the active status and role of a user.
+        /// </summary>
+        /// <param name="id">The unique identifier of the user to update.</param>
+        /// <param name="updateDto">The update data containing the new active status and role.</param>
+        /// <returns>
+        /// A <see cref="UserDTO"/> containing the updated user information.
+        /// </returns>
+        /// <response code="200">User was successfully updated.</response>
+        /// <response code="404">User with the specified ID was not found.</response>
+        /// <response code="400">Invalid role value provided.</response>
+        [HttpPut("status/{id}", Name = nameof(UpdateUserStatus))]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(UserDTO), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UpdateUserStatus(Guid id, [FromBody] UpdateUserStatusDTO updateDto)
+        {
+            try
+            {
+                var result = await _userService.UpdateUserStatusAsync(id, updateDto.IsActive, updateDto.Role);
+                return Ok(result);
+            }
+            catch (UserNotFoundException)
+            {
+                return Problem($"User with specified ID: {id} not found", null, StatusCodes.Status404NotFound);
+            }
+            catch (ArgumentException ex)
+            {
+                return Problem(ex.Message, null, StatusCodes.Status400BadRequest);
+            }
+        }
+
+
+        /// <summary>
         /// List all users
         /// </summary>
         /// <response code="200"></response>
@@ -150,6 +200,8 @@ namespace evoWatch.Controllers
             var result = await _userService.GetUsersAsync();
             return Ok(result);
         }
+
+
         /// <summary>
         /// Retrieves the profile picture of a user by their unique identifier.
         /// </summary>
@@ -259,6 +311,32 @@ namespace evoWatch.Controllers
             {
                 return Problem("An unknown error occurred while retrieving the profile picture.", null, StatusCodes.Status500InternalServerError);
             }
+        }
+
+        /// <summary>
+        /// Deletes user without password verification (admin-only endpoint)
+        /// </summary>
+        /// <param name="id">The user's unique identifier</param>
+        /// <response code="200">User was successfully removed</response>
+        /// <response code="404">User with specified ID not found</response>
+        [HttpDelete("admin/{id}", Name = nameof(RemoveUserWithoutPassword))]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> RemoveUserWithoutPassword(Guid id)
+        {
+            try
+            {
+                if (!await _userService.DeleteUserAsync(id))
+                {
+                    return Problem($"Couldn't delete the user with the specified ID: {id}", null, StatusCodes.Status400BadRequest);
+                }
+            }
+            catch (UserNotFoundException)
+            {
+                return Problem($"User with specified ID: {id} not found", null, StatusCodes.Status404NotFound);
+            }
+            return Ok();
         }
 
     }

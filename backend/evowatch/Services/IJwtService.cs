@@ -7,5 +7,6 @@ namespace evoWatch.Services
     {
         string GenerateToken(UserDTO user);
         ClaimsPrincipal ValidateToken ( string token );
+        string GenerateInvalidToken(UserDTO user);
     }
 }

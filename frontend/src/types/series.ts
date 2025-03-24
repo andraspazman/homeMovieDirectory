@@ -6,5 +6,6 @@ export interface Series{
     releaseYear: number;
     finalYear: number;
     description: string;
+    isMovie: boolean;
     
 }

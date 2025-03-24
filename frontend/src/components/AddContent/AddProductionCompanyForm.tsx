@@ -1,5 +1,4 @@
-// src/components/ProductionCompany/AddProductionCompanyModal.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -37,6 +36,16 @@ const AddProductionCompanyModal: React.FC<AddProductionCompanyModalProps> = ({
   const [loading, setLoading] = useState(false);
   const toast = useToast();
 
+  useEffect(() => {
+    // Reset form fields when modal is closed
+    if (!isOpen) {
+      setName("");
+      setFoundationYear("");
+      setCountry("");
+      setWebsite("");
+    }
+  }, [isOpen]);
+
   const handleSubmit = async () => {
     setLoading(true);
     try {
@@ -50,7 +59,13 @@ const AddProductionCompanyModal: React.FC<AddProductionCompanyModalProps> = ({
         `https://localhost:7204/episode/${episodeId}/productioncompany`,
         payload
       );
-      onProductionCompanyAdded(response.data);
+      // Biztosítjuk, hogy az id és website mindig definiált legyen
+      const newCompany: ProductionCompanyDTO = {
+        id: response.data.id || "generated-id", // fallback, ha nincs id
+        name: response.data.name,
+        website: response.data.website || "n/a",
+      };
+      onProductionCompanyAdded(newCompany);
       toast({
         title: "Production company added",
         status: "success",
@@ -91,7 +106,7 @@ const AddProductionCompanyModal: React.FC<AddProductionCompanyModalProps> = ({
             <FormLabel>Foundation Year</FormLabel>
             <Input
               type="number"
-              value={foundationYear ?? ""}
+              value={foundationYear || ""}
               onChange={(e) => setFoundationYear(e.target.value)}
               placeholder="Enter foundation year"
             />

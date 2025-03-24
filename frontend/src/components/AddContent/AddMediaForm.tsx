@@ -1,5 +1,25 @@
 import React, { useState, FormEvent, useEffect } from "react";
-import {Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Button,FormControl, FormLabel, Input,Textarea, RadioGroup, Radio, Stack, Select, useToast,} from "@chakra-ui/react";
+import {
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Button,
+  FormControl,
+  FormLabel,
+  Input,
+  Textarea,
+  RadioGroup,
+  Radio,
+  Stack,
+  Select,
+  useToast,
+  Progress,
+} from "@chakra-ui/react";
+import axios from "axios";
 
 type MediaType = "series" | "movie";
 
@@ -9,7 +29,6 @@ interface AddMediaModalProps {
 }
 
 export const AddMediaModal: React.FC<AddMediaModalProps> = ({ isOpen, onClose }) => {
-
   const [mediaType, setMediaType] = useState<MediaType>("series");
   const [title, setTitle] = useState("");
   const [genre, setGenre] = useState("");
@@ -18,17 +37,20 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({ isOpen, onClose })
   const [language, setLanguage] = useState("");
   const [award, setAward] = useState("");
   const [coverImage, setCoverImage] = useState<File | null>(null);
-
-
   const [finalYear, setFinalYear] = useState("");
-
   // Movie fields
   const [videoFile, setVideoFile] = useState<File | null>(null);
-
+  // Feltöltési progress state
+  const [videoUploadProgress, setVideoUploadProgress] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const toast = useToast();
 
-  //resel all fields when close form
+  // Statikus opciók a lenyíló listákhoz
+  const genreOptions = ["Action", "Comedy", "Drama", "Horror", "Sci-Fi", "Romance"];
+  const languageOptions = ["English", "Hungarian", "French", "German", "Spanish", "Italian"];
+  const currentYear = new Date().getFullYear();
+
+  // Reset fields when modal is closed
   useEffect(() => {
     if (!isOpen) {
       setMediaType("series");
@@ -41,8 +63,19 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({ isOpen, onClose })
       setCoverImage(null);
       setFinalYear("");
       setVideoFile(null);
+      setVideoUploadProgress(0);
     }
   }, [isOpen]);
+
+  // Generáljuk a release year opciókat dinamikusan (1900-tól 2024-ig)
+  const releaseYearOptions = Array.from({ length: currentYear - 1900 + 1 }, (_, i) => {
+    const year = (currentYear - i).toString();
+    return (
+      <option key={year} value={year}>
+        {year}
+      </option>
+    );
+  });
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -66,23 +99,23 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({ isOpen, onClose })
           formData.append("FinalYear", finalYear);
         }
         endpoint = "https://localhost:7204/series";
+        await axios.post(endpoint, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
       } else if (mediaType === "movie") {
         if (videoFile) {
           formData.append("videoFile", videoFile);
         }
         endpoint = "https://localhost:7204/movie";
+        await axios.post(endpoint, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+          onUploadProgress: (progressEvent) => {
+            const total = progressEvent.total ?? 1;
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / total);
+            setVideoUploadProgress(percentCompleted);
+          },
+        });
       }
-
-      const response = await fetch(endpoint, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Data recording failed.");
-      }
-
-      await response.json();
 
       toast({
         title: "Success!",
@@ -94,7 +127,7 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({ isOpen, onClose })
         duration: 3000,
         isClosable: true,
       });
-      onClose(); //reset fields
+      onClose(); // Reset fields and close modal
     } catch (error: any) {
       toast({
         title: "An error occurred.",
@@ -105,17 +138,9 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({ isOpen, onClose })
       });
     } finally {
       setIsSubmitting(false);
+      setVideoUploadProgress(0);
     }
   };
-
-  const releaseYearOptions = Array.from({ length: 2024 - 1900 + 1 }, (_, i) => {
-    const year = (1900 + i).toString();
-    return (
-      <option key={year} value={year}>
-        {year}
-      </option>
-    );
-  });
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
@@ -143,22 +168,11 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({ isOpen, onClose })
             <FormControl isRequired mb={3}>
               <FormLabel>Genre</FormLabel>
               <Select placeholder="Select genre" value={genre} onChange={(e) => setGenre(e.target.value)}>
-                <option value="drama">Drama</option>
-                <option value="action">Action</option>
-                <option value="animation">Animation</option>
-                <option value="sci-fi">Sci-Fi</option>
-                <option value="horror">horror</option>
-                <option value="thriller">thriller</option>
-                <option value="adventure">adventure</option>
-                <option value="biography">biography</option>
-                <option value="crime">crime</option>
-                <option value="romance">romance</option>
-                <option value="comedy">comedy</option>
-                <option value="documentary">documentary</option>
-                <option value="family">family</option>
-                <option value="history">history</option>
-                <option value="reality">reality</option>
-                <option value="war">war</option>
+                {genreOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
               </Select>
             </FormControl>
 
@@ -171,20 +185,22 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({ isOpen, onClose })
 
             <FormControl isRequired mb={3}>
               <FormLabel>Description</FormLabel>
-              <Textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
+              <Textarea
+                placeholder="Description"
+                value={description}
+                maxLength={300} // Maximum 300 karakter
+                onChange={(e) => setDescription(e.target.value)}
+              />
             </FormControl>
 
             <FormControl isRequired mb={3}>
               <FormLabel>Language</FormLabel>
               <Select placeholder="Select language" value={language} onChange={(e) => setLanguage(e.target.value)}>
-                <option value="english">English</option>
-                <option value="hungarian">Hungarian</option>
-                <option value="japanese">Japanese</option>
-                <option value="french">French</option>
-                <option value="spanish">Spanish</option>
-                <option value="german">German</option>
-                <option value="russian">Russian</option>
-                <option value="italian">Italian</option>
+                {languageOptions.map((lang) => (
+                  <option key={lang} value={lang}>
+                    {lang}
+                  </option>
+                ))}
               </Select>
             </FormControl>
 
@@ -201,18 +217,23 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({ isOpen, onClose })
             )}
 
             {mediaType === "movie" && (
-              <FormControl mb={3}>
-                <FormLabel>Video File (optional)</FormLabel>
-                <Input
-                  type="file"
-                  accept=".mp4"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      setVideoFile(e.target.files[0]);
-                    }
-                  }}
-                />
-              </FormControl>
+              <>
+                <FormControl mb={3}>
+                  <FormLabel>Video File (optional)</FormLabel>
+                  <Input
+                    type="file"
+                    accept=".mp4"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setVideoFile(e.target.files[0]);
+                      }
+                    }}
+                  />
+                </FormControl>
+                {videoFile && videoUploadProgress < 100 && (
+                  <Progress value={videoUploadProgress} size="sm" colorScheme="blue" mb={3} />
+                )}
+              </>
             )}
 
             <FormControl mb={3}>

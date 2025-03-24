@@ -37,9 +37,8 @@
   flex: 1;
   display: flex;
   justify-content: center;
-  padding-left: 20%;
-  padding-right: 20%;
-
+  /* padding-left: 20%;
+     padding-right: 20%;  Töröld vagy csökkentsd le */
 }
 
 .searchInput {
@@ -76,7 +75,7 @@
 .loginButton{
   color: rgb(128, 66, 66);
   padding-top: 0%;
-  margin-right: 10%;
+  margin-right: 5%;
   border: none;
   font-size: larger;
 

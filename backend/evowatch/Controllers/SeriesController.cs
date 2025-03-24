@@ -64,18 +64,15 @@ namespace evoWatch.Controllers
             return Ok(result);
         }
 
-        /// <summary>
-        /// Updates an existing series.
-        /// </summary>
         [HttpPut("{id:guid}", Name = nameof(UpdateSeries))]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(SeriesDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateSeries(Guid id, [FromBody] SeriesDTO series)
+        public async Task<IActionResult> UpdateSeries(Guid id, [FromForm] SeriesDTO series,  IFormFile? coverImage)
         {
             try
             {
-                var result = await _seriesService.UpdateSeriesAsync(id, series);
+                var result = await _seriesService.UpdateSeriesAsync(id, series, coverImage);
                 return Ok(result);
             }
             catch (SeriesNotFoundException)

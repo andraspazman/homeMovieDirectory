@@ -12,6 +12,7 @@ import {
   Input,
   Button,
   Text,
+  Progress,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { EpisodeDTO } from "../../types/EpisodeDTO";
@@ -29,12 +30,13 @@ export const AddEpisodeModal: React.FC<AddEpisodeModalProps> = ({
   seasonId,
   onEpisodeAdded,
 }) => {
-  // Kezeljük az episode number-t stringként, így az üres érték is eltávolítható
   const [episodeNumber, setEpisodeNumber] = useState<string>("");
   const [title, setTitle] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  // Új state a feltöltési előrehaladás nyomon követésére
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -46,7 +48,6 @@ export const AddEpisodeModal: React.FC<AddEpisodeModalProps> = ({
     setLoading(true);
     setError("");
 
-    // Konvertáljuk a megadott episodeNumber-t számmá, ellenőrizzük, hogy érvényes-e
     const num = Number(episodeNumber);
     if (!episodeNumber || isNaN(num) || num <= 0) {
       setError("Please enter a valid episode number");
@@ -54,14 +55,12 @@ export const AddEpisodeModal: React.FC<AddEpisodeModalProps> = ({
       return;
     }
 
-    // Összefűzzük a számot és a címet: "EP{num}: {title}"
     const fullTitle = `EP${num}: ${title}`;
 
     try {
       const formData = new FormData();
       formData.append("title", fullTitle);
       formData.append("SeasonId", seasonId);
-      // Az IsMovie értéke mindig false (mivel epizód)
       formData.append("IsMovie", "false");
       if (file) {
         formData.append("videoFile", file);
@@ -70,12 +69,17 @@ export const AddEpisodeModal: React.FC<AddEpisodeModalProps> = ({
       const response = await axios.post(
         "https://localhost:7204/episode",
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          onUploadProgress: (progressEvent) => {
+            const total = progressEvent.total ?? 1;
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / total);
+            setUploadProgress(percentCompleted);
+          },
+        }
       );
-      
 
       onEpisodeAdded(response.data.episode);
-      // Űrlap resetelése
       setEpisodeNumber("");
       setTitle("");
       setFile(null);
@@ -85,6 +89,7 @@ export const AddEpisodeModal: React.FC<AddEpisodeModalProps> = ({
       setError("Failed to add episode.");
     } finally {
       setLoading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -120,6 +125,10 @@ export const AddEpisodeModal: React.FC<AddEpisodeModalProps> = ({
               onChange={handleFileChange}
             />
           </FormControl>
+          {/* Megjelenítjük a feltöltési csíkot, ha van file és folyamatban van a feltöltés */}
+          {file && loading && uploadProgress < 100 && (
+            <Progress value={uploadProgress} size="sm" colorScheme="blue" mb={3} />
+          )}
           {error && <Text color="red.500">{error}</Text>}
         </ModalBody>
         <ModalFooter>
