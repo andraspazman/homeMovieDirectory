@@ -12,6 +12,9 @@ namespace evoWatch.Database
         public DbSet<ProductionCompany> ProductionCompanies { get; set; }
         public DbSet<Season> Seasons { get; set; }
         public DbSet<Series> Series { get; set; }
+        public DbSet<Playlist> Playlists { get; set; }
+        public DbSet<PlaylistItem> PlaylistItems { get; set; }
+
 
         public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
         {

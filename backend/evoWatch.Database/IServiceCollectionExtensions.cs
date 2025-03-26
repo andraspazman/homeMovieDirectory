@@ -25,6 +25,8 @@ namespace evoWatch.Database
             services.AddScoped<IPeopleRepository, PeopleRepository>();
             services.AddScoped<ICharacterRepository, CharacterRepository>();
             services.AddScoped<IProductionCompanyRepository, ProductionCompanyRepository>();
+            services.AddScoped<IPlaylistRepository, PlaylistRepository>();
+            services.AddScoped<IPlaylistItemRepository, PlaylistItemRepository>();
 
             return services;
         }
