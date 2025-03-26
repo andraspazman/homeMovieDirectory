@@ -1,7 +1,7 @@
 ﻿using evoWatch.Database.Models;
 using evoWatch.Database.Repositories;
 using evoWatch.DTOs;
-using evoWatch.Exceptions; // Ha egyedi exceptionokat használsz
+using evoWatch.Exceptions; // If you have custom exceptions
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,17 +25,16 @@ namespace evoWatch.Services.Implementations
             _seriesRepository = seriesRepository;
         }
 
-        /// <summary>
-        /// Lekérdezi a felhasználó lejátszási listáját. Ha a felhasználónak még nincs lejátszási listája, akkor létrehoz egy alapértelmezettat.
-        /// </summary>
+
         public async Task<PlaylistDTO> GetPlaylistByUserIdAsync(Guid userId)
         {
+            // Attempt to find any existing playlist(s) for the user
             var playlists = await _playlistRepository.GetPlaylistsByUserIdAsync(userId);
             var playlist = playlists.FirstOrDefault();
 
+            // If the user doesn't have a playlist, create a new default one
             if (playlist == null)
             {
-                // Ha nincs lejátszási lista, létrehozunk egy alapértelmezettet
                 playlist = new Playlist
                 {
                     Id = Guid.NewGuid(),
@@ -46,39 +45,36 @@ namespace evoWatch.Services.Implementations
                 playlist = await _playlistRepository.AddPlaylistAsync(playlist);
             }
 
+            // Convert the entity to a DTO
             return PlaylistDTO.CreateFromPlaylist(playlist);
         }
 
-        /// <summary>
-        /// Új elemet ad a lejátszási listához. Az elem lehet filmes/epizód (MoviesAndEpisodesId kitöltve) vagy sorozat (SeriesId kitöltve).
-        /// Legalább az egyik mezőnek nem szabad nullnak lennie.
-        /// </summary>
+
         public async Task<PlaylistItemDTO> AddPlaylistItemAsync(PlaylistItemCreateDTO itemDto)
         {
-            // 1) Ellenőrizd, hogy a felhasználó
-            //    legalább az egyik mezőt (MoviesAndEpisodesId / SeriesId) megadta
+            // (1) Ensure that the user provided at least one field: MoviesAndEpisodesId or SeriesId
             if (itemDto.MoviesAndEpisodesId == null && itemDto.SeriesId == null)
             {
-                throw new Exception("Legalabb a 'MoviesAndEpisodesId' vagy a 'SeriesId' mezot ki kell tolteni!");
+                throw new Exception("At least one field (MoviesAndEpisodesId or SeriesId) must be provided!");
             }
 
-            // 2) Ellenőrizd, hogy egyszerre ne lehessen kitöltve mindkettő
+            // (2) Ensure both fields aren't provided simultaneously
             if (itemDto.MoviesAndEpisodesId != null && itemDto.SeriesId != null)
             {
-                throw new Exception("Egyszerre nem adhato meg a 'MoviesAndEpisodesId' és a 'SeriesId'. Csak az egyik mezot hasznald!");
+                throw new Exception("MoviesAndEpisodesId and SeriesId cannot both be set. Please specify only one.");
             }
 
-            // 3) Ha a SeriesId nem null, akkor ellenőrizd, hogy létező sorozatra mutat-e
+            // (3) If SeriesId is provided, check that the corresponding series actually exists
             if (itemDto.SeriesId != null)
             {
                 var series = await _seriesRepository.GetSeriesByIdAsync(itemDto.SeriesId.Value);
                 if (series == null)
                 {
-                    throw new Exception("A megadott sorozat nem létezik az adatbázisban.");
+                    throw new SeriesNotFoundException();
                 }
             }
 
-            // 4) Megkeressük a megadott Playlist-et. Ha nem létezik, létrehozunk egyet automatikusan
+            // (4) Attempt to retrieve the specified playlist. If it doesn't exist, automatically create one.
             var playlist = await _playlistRepository.GetPlaylistByIdAsync(itemDto.PlaylistId);
             if (playlist == null)
             {
@@ -90,11 +86,11 @@ namespace evoWatch.Services.Implementations
                 };
 
                 playlist = await _playlistRepository.AddPlaylistAsync(playlist);
-                // Frissítjük a DTO PlaylistId mezőjét az új értékkel
+                // Update the DTO's PlaylistId with the newly created playlist's ID
                 itemDto.PlaylistId = playlist.Id;
             }
 
-            // 5) Létrehozzuk az új PlaylistItem-et
+            // (5) Create the new PlaylistItem
             var newItem = new PlaylistItem
             {
                 Id = Guid.NewGuid(),
@@ -107,55 +103,47 @@ namespace evoWatch.Services.Implementations
             return PlaylistItemDTO.CreateFromPlaylistItem(result);
         }
 
-        /// <summary>
-        /// Lekérdezi a megadott lejátszási lista összes elemét.
-        /// </summary>
+
         public async Task<IEnumerable<PlaylistItemDTO>> GetPlaylistItemsAsync(Guid playlistId)
         {
             var items = await _playlistItemRepository.GetPlaylistItemsByPlaylistIdAsync(playlistId);
             return items.Select(PlaylistItemDTO.CreateFromPlaylistItem);
         }
 
+
         public async Task<IEnumerable<PlaylistItemDTO>> GetAllPlaylistItemsForUserAsync(Guid userId)
         {
-                // 1) Lekérdezzük a felhasználóhoz tartozó összes playlistet
-                var playlists = await _playlistRepository.GetPlaylistsByUserIdAsync(userId);
+            // Retrieve all playlists belonging to the user
+            var playlists = await _playlistRepository.GetPlaylistsByUserIdAsync(userId);
 
-                // Ha nincs egyetlen playlist sem, akkor üres listát adunk vissza
-                if (!playlists.Any())
-                {
-                    return Enumerable.Empty<PlaylistItemDTO>();
-                }
+            // If the user has no playlists, return an empty list
+            if (!playlists.Any())
+            {
+                return Enumerable.Empty<PlaylistItemDTO>();
+            }
 
-                // 2) Összegyűjtjük a playlist itemeket a talált playlistek alapján
-                var allItems = new List<PlaylistItem>();
+            //  Collect items from each of the playlists found
+            var allItems = new List<PlaylistItem>();
+            foreach (var playlist in playlists)
+            {
+                var items = await _playlistItemRepository.GetPlaylistItemsByPlaylistIdAsync(playlist.Id);
+                allItems.AddRange(items);
+            }
 
-                foreach (var playlist in playlists)
-                {
-                    // Lekérjük az aktuális playlist összes elemét
-                    var items = await _playlistItemRepository.GetPlaylistItemsByPlaylistIdAsync(playlist.Id);
-                    allItems.AddRange(items);
-                }
+            // Convert the combined items into DTOs
+            var result = allItems.Select(PlaylistItemDTO.CreateFromPlaylistItem).ToList();
 
-                // 3) PlaylistItem -> PlaylistItemDTO konverzió
-                var result = allItems
-                    .Select(PlaylistItemDTO.CreateFromPlaylistItem)
-                    .ToList();
-
-                return result;
+            return result;
         }
 
-        /// <summary>
-        /// Törli a megadott azonosítójú playlist elemet.
-        /// </summary>
+
         public async Task<bool> DeletePlaylistItemAsync(Guid playlistItemId)
         {
-            // Feltételezzük, hogy a repository tartalmaz egy metódust a playlist elem lekérdezésére az azonosító alapján.
+            // We assume the repository has a method for retrieving a playlist item by ID.
             var item = await _playlistItemRepository.GetPlaylistItemByIdAsync(playlistItemId);
             if (item == null)
             {
-                // Itt akár egy egyedi exception is dobható, pl. PlaylistItemNotFoundException
-                throw new Exception("Playlist item not found.");
+                throw new PlaylistItemNotFoundException();
             }
 
             return await _playlistItemRepository.DeletePlaylistItemAsync(item);
