@@ -36,6 +36,18 @@ namespace evoWatch.Controllers
         }
 
         /// <summary>
+        /// Retrieves the user's playlist items.
+        /// </summary>
+        /// <param name="userId">The user's unique identifier.</param>
+        /// <returns>A PlaylistDTO representing the user's playlist items.</returns>
+        [HttpGet("user/{userId:guid}/items")]
+        public async Task<IActionResult> GetAllPlaylistItemsForUser(Guid userId)
+        {
+            var items = await _playlistService.GetAllPlaylistItemsForUserAsync(userId);
+            return Ok(items);
+        }
+
+        /// <summary>
         /// Adds a new item to the user's playlist.
         /// The request body must contain a valid PlaylistItemCreateDto.
         /// </summary>
@@ -92,5 +104,7 @@ namespace evoWatch.Controllers
                 return NotFound(new { error = ex.Message });
             }
         }
+
+
     }
 }

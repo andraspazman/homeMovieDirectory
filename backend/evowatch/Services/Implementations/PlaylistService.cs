@@ -13,13 +13,16 @@ namespace evoWatch.Services.Implementations
     {
         private readonly IPlaylistRepository _playlistRepository;
         private readonly IPlaylistItemRepository _playlistItemRepository;
+        private readonly ISeriesRepository _seriesRepository;
 
         public PlaylistService(
             IPlaylistRepository playlistRepository,
-            IPlaylistItemRepository playlistItemRepository)
+            IPlaylistItemRepository playlistItemRepository,
+            ISeriesRepository seriesRepository)
         {
             _playlistRepository = playlistRepository;
             _playlistItemRepository = playlistItemRepository;
+            _seriesRepository = seriesRepository;
         }
 
         /// <summary>
@@ -52,11 +55,46 @@ namespace evoWatch.Services.Implementations
         /// </summary>
         public async Task<PlaylistItemDTO> AddPlaylistItemAsync(PlaylistItemCreateDTO itemDto)
         {
+            // 1) Ellenőrizd, hogy a felhasználó
+            //    legalább az egyik mezőt (MoviesAndEpisodesId / SeriesId) megadta
             if (itemDto.MoviesAndEpisodesId == null && itemDto.SeriesId == null)
             {
-                throw new ArgumentException("Either MoviesAndEpisodesId or SeriesId must be provided.");
+                throw new Exception("Legalabb a 'MoviesAndEpisodesId' vagy a 'SeriesId' mezot ki kell tolteni!");
             }
 
+            // 2) Ellenőrizd, hogy egyszerre ne lehessen kitöltve mindkettő
+            if (itemDto.MoviesAndEpisodesId != null && itemDto.SeriesId != null)
+            {
+                throw new Exception("Egyszerre nem adhato meg a 'MoviesAndEpisodesId' és a 'SeriesId'. Csak az egyik mezot hasznald!");
+            }
+
+            // 3) Ha a SeriesId nem null, akkor ellenőrizd, hogy létező sorozatra mutat-e
+            if (itemDto.SeriesId != null)
+            {
+                var series = await _seriesRepository.GetSeriesByIdAsync(itemDto.SeriesId.Value);
+                if (series == null)
+                {
+                    throw new Exception("A megadott sorozat nem létezik az adatbázisban.");
+                }
+            }
+
+            // 4) Megkeressük a megadott Playlist-et. Ha nem létezik, létrehozunk egyet automatikusan
+            var playlist = await _playlistRepository.GetPlaylistByIdAsync(itemDto.PlaylistId);
+            if (playlist == null)
+            {
+                playlist = new Playlist
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = itemDto.UserId,
+                    PlaylistItems = new List<PlaylistItem>()
+                };
+
+                playlist = await _playlistRepository.AddPlaylistAsync(playlist);
+                // Frissítjük a DTO PlaylistId mezőjét az új értékkel
+                itemDto.PlaylistId = playlist.Id;
+            }
+
+            // 5) Létrehozzuk az új PlaylistItem-et
             var newItem = new PlaylistItem
             {
                 Id = Guid.NewGuid(),
@@ -76,6 +114,35 @@ namespace evoWatch.Services.Implementations
         {
             var items = await _playlistItemRepository.GetPlaylistItemsByPlaylistIdAsync(playlistId);
             return items.Select(PlaylistItemDTO.CreateFromPlaylistItem);
+        }
+
+        public async Task<IEnumerable<PlaylistItemDTO>> GetAllPlaylistItemsForUserAsync(Guid userId)
+        {
+                // 1) Lekérdezzük a felhasználóhoz tartozó összes playlistet
+                var playlists = await _playlistRepository.GetPlaylistsByUserIdAsync(userId);
+
+                // Ha nincs egyetlen playlist sem, akkor üres listát adunk vissza
+                if (!playlists.Any())
+                {
+                    return Enumerable.Empty<PlaylistItemDTO>();
+                }
+
+                // 2) Összegyűjtjük a playlist itemeket a talált playlistek alapján
+                var allItems = new List<PlaylistItem>();
+
+                foreach (var playlist in playlists)
+                {
+                    // Lekérjük az aktuális playlist összes elemét
+                    var items = await _playlistItemRepository.GetPlaylistItemsByPlaylistIdAsync(playlist.Id);
+                    allItems.AddRange(items);
+                }
+
+                // 3) PlaylistItem -> PlaylistItemDTO konverzió
+                var result = allItems
+                    .Select(PlaylistItemDTO.CreateFromPlaylistItem)
+                    .ToList();
+
+                return result;
         }
 
         /// <summary>
