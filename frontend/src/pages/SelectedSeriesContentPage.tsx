@@ -11,16 +11,15 @@ interface OutletContextType {
 const SelectedMoviePage = () => {
   const { isSidebarOpen } = useOutletContext<OutletContextType>();
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
-
+  const [selectedDecades, setSelectedDecades] = useState<string[]>([]);
   return (
     <Flex>
       <Sidebar
         isOpen={isSidebarOpen}
         selectedGenres={selectedGenres}
         setSelectedGenres={setSelectedGenres}
-        selectedCountries={selectedCountries}
-        setSelectedCountries={setSelectedCountries}
+        selectedDecades={selectedDecades}
+        setSelectedDecades={setSelectedDecades}
       />
 
       <Box ml={isSidebarOpen ? "13%" : "2%"} p={1} flex="1" padding={10}>
