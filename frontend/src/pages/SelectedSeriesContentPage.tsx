@@ -12,6 +12,7 @@ const SelectedMoviePage = () => {
   const { isSidebarOpen } = useOutletContext<OutletContextType>();
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [selectedDecades, setSelectedDecades] = useState<string[]>([]);
+
   return (
     <Flex>
       <Sidebar
