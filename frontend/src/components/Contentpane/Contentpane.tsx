@@ -69,14 +69,14 @@ const SeriesGrid = ({ selectedGenres, selectedDecades }: SeriesGridProps) => {
 
   return (
     <>
-      <Box className={styles.movieText} mb={4} textAlign="center" bg="grey.200" p={4} borderRadius="md" boxShadow="lg">
+      <Box className={styles.movieText} mb={4} textAlign="center" bg="grey.200" p={4} borderRadius="md" boxShadow="base">
         <Heading as="h2" size="lg" color="black">
           Latest Releases
         </Heading>
       </Box>
       <SimpleGrid rowGap={0} spacing={5} columns={[5]} className={styles.grid}>
         {filteredSeries.map((item) => (
-          <GridItem
+          <GridItem boxShadow="dark-lg"
             key={item.id}
             className={styles.gridItem}
             onClick={() => {

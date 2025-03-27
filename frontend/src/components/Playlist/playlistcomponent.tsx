@@ -185,10 +185,10 @@ const PlaylistGrid: React.FC = () => {
       <Box
         mb={4}
         textAlign="center"
-        bg="gray.200"
+        
         p={4}
         borderRadius="md"
-        boxShadow="lg"
+        boxShadow="base"
         mt="5%"
       >
         <Heading as="h2" size="lg" color="black" >
@@ -210,10 +210,10 @@ const PlaylistGrid: React.FC = () => {
                 }
               }}
               cursor="pointer"
-              borderWidth="1px"
+              borderWidth="1%"
               borderRadius="md"
               overflow="hidden"
-              boxShadow="md"
+              boxShadow="dark-lg"
             >
               <Image
                 src={`https://localhost:7204/images/${item.coverImagePath}`}
