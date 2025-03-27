@@ -9,21 +9,27 @@ import {
   Spinner,
   Alert,
   AlertIcon,
+  Button,
+  HStack,
+  IconButton,
 } from "@chakra-ui/react";
+import { DeleteIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../../context/UserContext"; // Adjust path as needed
 
 // Define the interface for a playlist item returned by your playlist API.
 interface PlaylistItemDTO {
-  id: string;
+  id: string; // This is the playlist item id
   playlistId: string;
   moviesAndEpisodesId?: string | null;
   seriesId?: string | null;
 }
 
 // Define an interface for the detailed content we wish to display.
+// We add both playlistItemId (for deletion) and contentId (for navigation).
 interface ContentDetails {
-  id: string;
+  playlistItemId: string; // The ID of the playlist item
+  contentId: string;      // The ID of the movie/series content
   title: string;
   genre: string;
   coverImagePath: string;
@@ -38,8 +44,32 @@ const PlaylistGrid: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Pagination state: current page and items per page.
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 5;
+
+  // Function to handle deletion of a playlist item using its playlistItemId.
+  const handleDeleteItem = async (playlistItemId: string) => {
+    const confirmed = window.confirm("Are you sure you want to delete this item?");
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(`https://localhost:7204/playlist/item/${playlistItemId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete playlist item");
+      }
+      // Remove deleted item from state.
+      setDisplayItems((prevItems) =>
+        prevItems.filter((item) => item.playlistItemId !== playlistItemId)
+      );
+    } catch (err: any) {
+      alert(err.message || "An error occurred while deleting the item.");
+    }
+  };
+
   useEffect(() => {
-    // If no user is logged in, set an error.
     if (!user) {
       setError("No user is logged in.");
       setLoading(false);
@@ -61,7 +91,7 @@ const PlaylistGrid: React.FC = () => {
         const playlistItems: PlaylistItemDTO[] = await playlistResponse.json();
 
         // 2. For each playlist item, determine whether it's a movie/episode or a series,
-        //    then fetch the detailed data from the appropriate endpoint.
+        // then fetch the detailed data from the appropriate endpoint.
         const detailPromises = playlistItems.map(async (item) => {
           let detailUrl = "";
           let isMovie = false;
@@ -86,13 +116,13 @@ const PlaylistGrid: React.FC = () => {
           }
           const contentData = await detailResponse.json();
 
-          // Build a ContentDetails object. Adjust the property names if your API returns different keys.
+          // Build a ContentDetails object.
           return {
-            id: contentData.id,
+            playlistItemId: item.id,      // Preserve the original playlist item id.
+            contentId: contentData.id,      // Use the content id from the details response.
             title: contentData.title,
             genre: contentData.genre,
             coverImagePath: contentData.coverImagePath,
-            // Use the value returned by the API if available, otherwise use the local isMovie flag.
             isMovie: contentData.isMovie !== undefined ? contentData.isMovie : isMovie,
           } as ContentDetails;
         });
@@ -113,6 +143,21 @@ const PlaylistGrid: React.FC = () => {
     fetchPlaylistItems();
   }, [user]);
 
+  // Calculate pagination values.
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = displayItems.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(displayItems.length / itemsPerPage);
+
+  // Pagination handlers.
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
   if (loading) {
     return (
       <Box p={4}>
@@ -132,47 +177,88 @@ const PlaylistGrid: React.FC = () => {
   }
 
   if (displayItems.length === 0) {
-    return <Text>Your playlist is empty.</Text>;
+    return <Text pt="20%">Your playlist is empty.</Text>;
   }
 
   return (
     <>
-      <Box mb={4} textAlign="center" bg="gray.200" p={4} borderRadius="md" boxShadow="lg">
-        <Heading as="h2" size="lg" color="black">
-          {user?.normalName || user?.email}&apos;s Playlist
+      <Box
+        mb={4}
+        textAlign="center"
+        bg="gray.200"
+        p={4}
+        borderRadius="md"
+        boxShadow="lg"
+        mt="5%"
+      >
+        <Heading as="h2" size="lg" color="black" >
+          {user?.nickname || user?.normalName}&apos;s playlist
         </Heading>
       </Box>
 
       <SimpleGrid spacing={5} columns={[5]}>
-        {displayItems.map((item) => (
-          <GridItem
-            key={item.id}
-            onClick={() => {
-              // Navigate based on content type.
-              if (item.isMovie) {
-                navigate(`/movie/${item.id}`);
-              } else {
-                navigate(`/series/${item.id}`);
-              }
-            }}
-            style={{ cursor: "pointer" }}
-          >
-            <Image
-              src={`https://localhost:7204/images/${item.coverImagePath}`}
-              alt={item.title}
-              width="100%"
-              height="auto"
-            />
-            <Box mt={2}>
-              <Text fontWeight="bold">{item.title}</Text>
-              <Text>{item.genre}</Text>
-              <Text fontSize="sm" color="gray.600">
-                {item.isMovie ? "Movie" : "Series"} ID: {item.id}
-              </Text>
+        {currentItems.map((item) => (
+          <GridItem key={item.playlistItemId}>
+            <Box
+              position="relative"
+              onClick={() => {
+                // Navigate to the content details using the contentId.
+                if (item.isMovie) {
+                  navigate(`/movie/${item.contentId}`);
+                } else {
+                  navigate(`/series/${item.contentId}`);
+                }
+              }}
+              cursor="pointer"
+              borderWidth="1px"
+              borderRadius="md"
+              overflow="hidden"
+              boxShadow="md"
+            >
+              <Image
+                src={`https://localhost:7204/images/${item.coverImagePath}`}
+                alt={item.title}
+                width="100%"
+                height="250px"
+                objectFit="cover"
+              />
+              {/* Delete button positioned at top-right corner */}
+              <IconButton
+                position="absolute"
+                top="2"
+                right="2"
+                size="sm"
+                icon={<DeleteIcon />}
+                aria-label="Delete"
+                colorScheme="red"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent parent onClick from triggering.
+                  handleDeleteItem(item.playlistItemId);
+                }}
+              />
+              <Box p={2}>
+                <Text fontWeight="bold">{item.title}</Text>
+                <Text>{item.genre}</Text>
+                <Text fontSize="sm" color="gray.600">
+                  {item.isMovie ? "Movie" : "Series"} ID: {item.contentId}
+                </Text>
+              </Box>
             </Box>
           </GridItem>
         ))}
       </SimpleGrid>
+
+      <HStack spacing={4} justifyContent="center" mt={8}>
+        <Button onClick={handlePrevPage} disabled={currentPage === 1}>
+          Previous
+        </Button>
+        <Text>
+          Page {currentPage} of {totalPages}
+        </Text>
+        <Button onClick={handleNextPage} disabled={currentPage === totalPages}>
+          Next
+        </Button>
+      </HStack>
     </>
   );
 };
