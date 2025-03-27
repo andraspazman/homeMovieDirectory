@@ -5,7 +5,7 @@ import NavBar from "../components/Navbar/Navbar";
 import AuthModal from "../components/Login/LoginForm";
 import { useState, useEffect } from "react"; 
 import { useDisclosure } from "@chakra-ui/react";
-import { AddMediaModal } from "../components/AddContent/AddMediaForm";
+import { AddMediaModal } from "../components/AddContentForms/AddMediaForm";
 
 export default function Layout() {
   const { setUser } = useUser();

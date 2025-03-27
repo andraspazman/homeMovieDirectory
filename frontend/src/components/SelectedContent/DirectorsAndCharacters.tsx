@@ -91,15 +91,16 @@ export const DirectorsAndCharacters: React.FC<DirectorsAndCharactersProps> = ({
                 </>
               )}
               {pwc.characters && pwc.characters.length > 0 && (
-                <UnorderedList mt={2}>
-                  {pwc.characters.slice(0, 5).map((character, idx) => (
-                    <ListItem key={character.id || idx}>
+                <Box mt={2}>
+                  {pwc.characters.slice(0, 5).map((character, idx, arr) => (
+                    <Text as="span" key={character.id || idx}>
                       {character.characterName}
                       {character.nickName ? ` - ${character.nickName}` : ""}
                       {character.role ? ` (${character.role})` : ""}
-                    </ListItem>
+                      {idx !== arr.length - 1 && ", "}
+                    </Text>
                   ))}
-                </UnorderedList>
+                </Box>
               )}
             </ListItem>
           ))}
