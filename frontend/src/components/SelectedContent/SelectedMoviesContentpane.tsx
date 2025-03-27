@@ -28,11 +28,6 @@ import EditProductionCompanyModal from "../SelectedContentEditForms/EditProducti
 import AddProductionCompanyModal from "../AddContentForms/AddProductionCompanyForm";
 import styles from "./SelectedContentpane.module.scss";
 import { ProductionCompanyDTO } from "../../types/ProductionCompanyDTO";
-
-import { AddCharacterModal } from "../../components/AddContent/AddCharaterModal";
-import { AddPersonModal } from "../AddContent/AddPersonForm";
-import { EditMovieModal } from "../../components/SelectedContentForms/EditMovieModal";
-
 import { AddCharacterModal } from "../AddContentForms/AddCharaterModal";
 import { AddPersonModal } from "../AddContentForms/AddPersonForm";
 import { EditMovieModal } from "../SelectedContentEditForms/EditMovieModal"; // Új import az edit movie modalhoz
