@@ -33,6 +33,7 @@ namespace evoWatch
             services.AddScoped<IPersonService, PersonService>();
             services.AddScoped<ICharacterService, CharacterService>();
             services.AddScoped<IProductionCompanyService, ProductionCompanyService>();
+            services.AddScoped<IPlaylistService, PlaylistService>();
 
             return services;
         }

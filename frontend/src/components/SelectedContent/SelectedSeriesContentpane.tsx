@@ -7,23 +7,23 @@ import { FilePenLine } from "lucide-react";
 import styles from "./SelectedContentpane.module.scss";
 import { SeriesDTO } from "../../types/SeriesDTO";
 import { EpisodeDTO } from "../../types/EpisodeDTO";
-import { EditSeriesModal } from "../SelectedContentEditForms/EditSeriesModal";
-import { AddSeasonModal } from "../AddContentForms/AddSeasonForm";
-import { EditEpisodeModal } from "../SelectedContentEditForms/EditEpisodeModal";
-import { EditSeasonModal } from "../SelectedContentEditForms/EditSeasonModal";
-import EditProductionCompanyModal from "../SelectedContentEditForms/EditProductionCompanyModal";
-import { AddEpisodeModal } from "../AddContentForms/AddEpisodeForm";
-import { AddPersonModal } from "../AddContentForms/AddPersonForm";
+import { EditSeriesModal } from "../SelectedContentForms/EditSeriesModal";
+import { AddSeasonModal } from "../../components/AddContent/AddSeasonForm";
+import { EditEpisodeModal } from "../SelectedContentForms/EditEpisodeModal";
+import { EditSeasonModal } from "../SelectedContentForms/EditSeasonModal";
+import EditProductionCompanyModal from "../SelectedContentForms/EditProductionCompanyModal";
+import { AddEpisodeModal } from "../AddContent/AddEpisodeForm";
+import { AddPersonModal } from "../AddContent/AddPersonForm";
 import { useUser } from "../../context/UserContext";
 import { useSeriesData } from "../../hooks/useSeriesData";
 import { useEpisodeDetails } from "../../hooks/useEpisodeDetails";
-import { AddCharacterModal } from "../AddContentForms/AddCharaterModal";
+import { AddCharacterModal } from "../../components/AddContent/AddCharaterModal";
 import { DirectorsAndCharacters } from "../../components/SelectedContent/DirectorsAndCharacters";
 import { PersonWithCharacterDTO } from "../../types/PersonWithCharacterDTO";
 import { SeriesEpisodes } from "../SelectedContent/SeriesWithEpisodes";
 import ProductionCompany from "../SelectedContent/ProductionCompany";
 import { ProductionCompanyDTO } from "../../types/ProductionCompanyDTO";
-import AddProductionCompanyModal from "../AddContentForms/AddProductionCompanyForm";
+import AddProductionCompanyModal from "../AddContent/AddProductionCompanyForm";
 
 const SelectedSeriesContentPane = () => {
   const { id } = useParams();
@@ -212,6 +212,52 @@ const SelectedSeriesContentPane = () => {
     onOpen();
   };
 
+  const handleAddToPlaylist = async () => {
+    if (!user || !item) return;
+    try {
+      // Fetch user's playlist
+      const playlistResponse = await fetch(`https://localhost:7204/playlist/user/${user.id}`);
+      if (!playlistResponse.ok) {
+        throw new Error("Failed to fetch user's playlist.");
+      }
+      const playlistData = await playlistResponse.json();
+      const playlistId = playlistData.id;
+  
+      // Payload for adding a series to the playlist (moviesAndEpisodesId is null)
+      const payload = {
+        playlistId: playlistId,
+        userId: user.id,
+        moviesAndEpisodesId: null,
+        seriesId: item.id,
+      };
+  
+      // POST request to add the series to the playlist
+      const response = await fetch("https://localhost:7204/playlist/item", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to add series to playlist.");
+      }
+      toast({
+        title: "Added to Playlist",
+        description: "The series has been added to your playlist.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add series to playlist.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   if (loading) {
     return (<Flex className={styles.loadingContainer}><Spinner size="xl" /></Flex>);
   }
@@ -228,6 +274,11 @@ const SelectedSeriesContentPane = () => {
       <Flex className={styles.topSection}>
         <Box className={styles.imageContainer}>
           <Image src={`https://localhost:7204/images/${item.coverImagePath}`} alt={item.title} className={styles.coverImage} />
+          {isLoggedIn && (
+                        <Button colorScheme="green" onClick={handleAddToPlaylist} mt={2}>
+                          Add to Playlist
+                        </Button>
+            )}
         </Box>
         <Box className={styles.detailsContainer}>
           <Heading size="xl" mb={3}> {item.title}

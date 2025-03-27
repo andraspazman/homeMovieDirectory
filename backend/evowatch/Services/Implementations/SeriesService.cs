@@ -85,7 +85,7 @@ namespace evoWatch.Services.Implementations
 
             if (coverImage != null && coverImage.Length > 0)
             {
-                // Ha szükséges, itt törölheted a korábbi képet, mielőtt felülírnád.
+                // Delete previous picture
                 existingSeries.CoverImagePath = await _fileService.SaveFileAsync(coverImage);
             }
 
@@ -101,17 +101,17 @@ namespace evoWatch.Services.Implementations
 
         public async Task<EpisodeIdDTO> GetEp1EpisodeIdAsync(Guid seriesId)
         {
-            // Betöltjük a Series entitást a kapcsolódó Season-ekkel és Episode-ökkel
+            
             var series = await _seriesRepository.GetSeriesWithSeasonsAndEpisodesByIdAsync(seriesId);
             if (series == null)
                 throw new SeriesNotFoundException();
 
-            // Kiválasztjuk azt a szezont, ahol a SeasonNumber értéke 1
+            
             var season = series.Seasons.FirstOrDefault(s => s.SeasonNumber == 1);
             if (season == null)
                 throw new SeasonNotFoundException();
 
-            // Az adott szezonnak az epizódjai között keressük azt, amelyik címében szerepel az "EP1"
+            
             var ep1Episode = season.Episodes
                 .FirstOrDefault(e => e.Title.Trim().IndexOf("EP1", StringComparison.OrdinalIgnoreCase) >= 0);
 

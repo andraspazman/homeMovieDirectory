@@ -17,20 +17,20 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
-  useToast
+  useToast,
 } from "@chakra-ui/react";
 import { useUser } from "../../context/UserContext";
 import ProductionCompany from "../SelectedContent/ProductionCompany";
 import { DirectorsAndCharacters } from "../SelectedContent/DirectorsAndCharacters";
 import { MovieDTO } from "../../types/MovieDTO";
 import { PersonWithCharacterDTO } from "../../types/PersonWithCharacterDTO";
-import EditProductionCompanyModal from "../SelectedContentEditForms/EditProductionCompanyModal";
-import AddProductionCompanyModal from "../AddContentForms/AddProductionCompanyForm";
+import EditProductionCompanyModal from "../SelectedContentForms/EditProductionCompanyModal";
+import AddProductionCompanyModal from "../../components/AddContent/AddProductionCompanyForm";
 import styles from "./SelectedContentpane.module.scss";
 import { ProductionCompanyDTO } from "../../types/ProductionCompanyDTO";
-import { AddCharacterModal } from "../AddContentForms/AddCharaterModal";
-import { AddPersonModal } from "../AddContentForms/AddPersonForm";
-import { EditMovieModal } from "../SelectedContentEditForms/EditMovieModal"; // Új import az edit movie modalhoz
+import { AddCharacterModal } from "../../components/AddContent/AddCharaterModal";
+import { AddPersonModal } from "../AddContent/AddPersonForm";
+import { EditMovieModal } from "../../components/SelectedContentForms/EditMovieModal";
 import { FilePenLine } from "lucide-react";
 
 const SelectedMovieContentPane = () => {
@@ -43,38 +43,37 @@ const SelectedMovieContentPane = () => {
   const [loadingMovie, setLoadingMovie] = useState<boolean>(true);
   const [errorMovie, setErrorMovie] = useState<string>("");
 
-  // Production company adatok
+  // Production company state
   const [productionCompany, setProductionCompany] = useState<ProductionCompanyDTO | null>(null);
 
-  // Személyek és karakterek
+  // Persons and characters state
   const [persons, setPersons] = useState<PersonWithCharacterDTO[]>([]);
   const [characters, setCharacters] = useState<PersonWithCharacterDTO[]>([]);
 
-  // Videó modal vezérlése
+  // Video modal controls
   const { isOpen, onOpen, onClose } = useDisclosure();
-  // Edit Movie modal vezérlése
+  // Edit Movie modal controls
   const { isOpen: isEditMovieOpen, onOpen: onEditMovieOpen, onClose: onEditMovieClose } = useDisclosure();
 
-  // Edit Production Company modal állapota
+  // Edit Production Company modal state
   const [isEditProductionCompanyOpen, setIsEditProductionCompanyOpen] = useState(false);
   const openEditProductionCompany = () => setIsEditProductionCompanyOpen(true);
   const closeEditProductionCompany = () => setIsEditProductionCompanyOpen(false);
 
-  // Add Production Company modal állapota
+  // Add Production Company modal state
   const [isAddProductionCompanyOpen, setIsAddProductionCompanyOpen] = useState(false);
   const openAddProductionCompany = () => setIsAddProductionCompanyOpen(true);
   const closeAddProductionCompany = () => setIsAddProductionCompanyOpen(false);
 
-  // Állapot az Add Character Modal vezérléséhez
+  // Add Character modal state
   const [isAddCharacterModalOpen, setIsAddCharacterModalOpen] = useState(false);
   const [selectedPersonIdForCharacter, setSelectedPersonIdForCharacter] = useState<string | null>(null);
-
   const handleOpenAddCharacter = (personId: string) => {
     setSelectedPersonIdForCharacter(personId);
     setIsAddCharacterModalOpen(true);
   };
 
-  // Add Person modal vezérlése
+  // Add Person modal controls
   const [isAddPersonModalOpen, setIsAddPersonModalOpen] = useState(false);
   const handleOpenAddPerson = () => {
     setIsAddPersonModalOpen(true);
@@ -98,7 +97,7 @@ const SelectedMovieContentPane = () => {
     axios
       .delete(`https://localhost:7204/person/${personId}`)
       .then(() => {
-        setPersons(prev => prev.filter(pwc => pwc.person.id !== personId));
+        setPersons((prev) => prev.filter((pwc) => pwc.person.id !== personId));
         toast({
           title: "Person deleted",
           status: "success",
@@ -135,7 +134,56 @@ const SelectedMovieContentPane = () => {
     });
   };
 
-  // Film részletek lekérése (/movie/{id})
+  // Function to add the current movie to the user's playlist.
+  const handleAddToPlaylist = async () => {
+    if (!user || !movie) return;
+    try {
+      // First, fetch the user's playlist to get its ID.
+      const playlistResponse = await fetch(`https://localhost:7204/playlist/user/${user.id}`);
+      if (!playlistResponse.ok) {
+        throw new Error("Failed to fetch user's playlist.");
+      }
+      const playlistData = await playlistResponse.json();
+      const playlistId = playlistData.id; // Assuming the playlist object contains an 'id' field.
+
+      // Prepare the payload. For a movie, we use the movie's id as moviesAndEpisodesId and set seriesId to null.
+      const payload = {
+        playlistId: playlistId,
+        userId: user.id,
+        moviesAndEpisodesId: movie.id,
+        seriesId: null,
+      };
+
+      // Call the POST endpoint to add the movie to the playlist.
+      const response = await fetch("https://localhost:7204/playlist/item", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to add movie to playlist.");
+      }
+      toast({
+        title: "Added to Playlist",
+        description: "The movie has been added to your playlist.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add movie to playlist.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // Film details fetching (/movie/{id})
   useEffect(() => {
     if (!id) return;
     setLoadingMovie(true);
@@ -156,7 +204,7 @@ const SelectedMovieContentPane = () => {
       });
   }, [id]);
 
-  // Production company lekérése
+  // Production company fetching
   useEffect(() => {
     if (!id) return;
     axios
@@ -166,7 +214,7 @@ const SelectedMovieContentPane = () => {
         setProductionCompany({
           id: data.id || "",
           name: data.name,
-          website: data.website || "n/a"
+          website: data.website || "n/a",
         });
       })
       .catch((err) => {
@@ -175,7 +223,7 @@ const SelectedMovieContentPane = () => {
       });
   }, [id]);
 
-  // Személyek lekérése
+  // Persons fetching
   useEffect(() => {
     if (!id) return;
     axios
@@ -189,7 +237,7 @@ const SelectedMovieContentPane = () => {
               name: p.name,
               role: p.role,
             },
-            characters: []
+            characters: [],
           };
         });
         setPersons(transformed);
@@ -200,7 +248,7 @@ const SelectedMovieContentPane = () => {
       });
   }, [id]);
 
-  // Karakterek lekérése
+  // Characters fetching
   useEffect(() => {
     if (!id) return;
     axios
@@ -222,8 +270,8 @@ const SelectedMovieContentPane = () => {
                 nickName: c.nickName,
                 episodeId: c.episodeId,
                 personId: c.personId ? c.personId : c.id,
-              }
-            ]
+              },
+            ],
           };
         });
         setCharacters(transformed);
@@ -249,13 +297,13 @@ const SelectedMovieContentPane = () => {
     );
   }
 
-  // Direktrok szűrése
-  const directors = persons.filter(pwc => pwc.person?.role === "director");
+  // Filter directors.
+  const directors = persons.filter((pwc) => pwc.person?.role === "director");
 
   return (
     <Box>
       <Flex className={styles.topSection} pr="10%" pl="10%">
-        {/* Bal oldal: Borítókép */}
+        {/* Left Side: Cover Image and Buttons */}
         <Box className={styles.imageContainer}>
           <Image
             src={`https://localhost:7204/images/${movie.coverImagePath}`}
@@ -265,15 +313,21 @@ const SelectedMovieContentPane = () => {
           <Button colorScheme="blue" onClick={onOpen} mt={2}>
             Watch now
           </Button>
+          {/* Add to Playlist button */}
+          {isLoggedIn && (
+            <Button colorScheme="green" onClick={handleAddToPlaylist} mt={2}>
+              Add to Playlist
+            </Button>
+          )}
         </Box>
 
-        {/* Jobb oldal: Film adatok */}
+        {/* Right Side: Movie Details */}
         <Box className={styles.detailsContainer}>
           <Flex alignItems="center" mb={3}>
             <Heading size="xl">{movie.title}</Heading>
             {isLoggedIn && (
-              <Button ml={3} colorScheme="yellow"size="sm" onClick={onEditMovieOpen}><FilePenLine />
-               
+              <Button ml={3} colorScheme="yellow" size="sm" onClick={onEditMovieOpen}>
+                <FilePenLine />
               </Button>
             )}
           </Flex>
@@ -283,7 +337,7 @@ const SelectedMovieContentPane = () => {
           {movie.award && <Text><strong>Award:</strong> {movie.award}</Text>}
           <Text mt={2}><strong>Description:</strong> {movie.description}</Text>
           
-          {/* Production Company és egyéb komponensek */}
+          {/* Production Company and other components */}
           <Flex direction="row" mt={4} gap={4}>
             <Box flex="1">
               <ProductionCompany
@@ -299,7 +353,7 @@ const SelectedMovieContentPane = () => {
         <Box flex="1">
           <DirectorsAndCharacters
             directors={directors}
-            characters={persons.filter(pwc => pwc.person?.role !== "director")}
+            characters={persons.filter((pwc) => pwc.person?.role !== "director")}
             isLoggedIn={isLoggedIn}
             onDeletePerson={handleDeletePerson}
             onAddCharacter={handleOpenAddCharacter}
@@ -308,7 +362,7 @@ const SelectedMovieContentPane = () => {
         </Box>
       </Flex>
 
-      {/* Videó modal */}
+      {/* Video modal */}
       <Modal isOpen={isOpen} onClose={onClose} isCentered size="xl">
         <ModalOverlay />
         <ModalContent>
@@ -321,7 +375,7 @@ const SelectedMovieContentPane = () => {
             </video>
           </ModalBody>
           <ModalFooter>
-            {/* Opcionális vezérlők */}
+            {/* Optional controls */}
           </ModalFooter>
         </ModalContent>
       </Modal>
@@ -353,12 +407,10 @@ const SelectedMovieContentPane = () => {
           onClose={closeAddProductionCompany}
           episodeId={id!}
           onProductionCompanyAdded={(newCompany) => {
-            // Frissítjük az állapotot az új cég adataival
             setProductionCompany(newCompany);
-            setMovie(prev => prev ? { ...prev, productionCompany: newCompany } : prev);
-            // Opcionális: újra lekérjük a legfrissebb adatokat az API‑ból
+            setMovie((prev) => (prev ? { ...prev, productionCompany: newCompany } : prev));
             axios.get<ProductionCompanyDTO>(`https://localhost:7204/episode/${id}/productioncompany`)
-              .then(response => {
+              .then((response) => {
                 const data = response.data;
                 setProductionCompany({
                   id: data.id || "",
@@ -366,7 +418,7 @@ const SelectedMovieContentPane = () => {
                   website: data.website || "n/a"
                 });
               })
-              .catch(err => console.error("Error reloading production company:", err));
+              .catch((err) => console.error("Error reloading production company:", err));
             closeAddProductionCompany();
           }}
         />
