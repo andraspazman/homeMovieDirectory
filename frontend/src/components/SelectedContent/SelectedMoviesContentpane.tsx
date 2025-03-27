@@ -24,13 +24,19 @@ import ProductionCompany from "../SelectedContent/ProductionCompany";
 import { DirectorsAndCharacters } from "../SelectedContent/DirectorsAndCharacters";
 import { MovieDTO } from "../../types/MovieDTO";
 import { PersonWithCharacterDTO } from "../../types/PersonWithCharacterDTO";
-import EditProductionCompanyModal from "../SelectedContentForms/EditProductionCompanyModal";
-import AddProductionCompanyModal from "../../components/AddContent/AddProductionCompanyForm";
+import EditProductionCompanyModal from "../SelectedContentEditForms/EditProductionCompanyModal";
+import AddProductionCompanyModal from "../AddContentForms/AddProductionCompanyForm";
 import styles from "./SelectedContentpane.module.scss";
 import { ProductionCompanyDTO } from "../../types/ProductionCompanyDTO";
+
 import { AddCharacterModal } from "../../components/AddContent/AddCharaterModal";
 import { AddPersonModal } from "../AddContent/AddPersonForm";
 import { EditMovieModal } from "../../components/SelectedContentForms/EditMovieModal";
+
+import { AddCharacterModal } from "../AddContentForms/AddCharaterModal";
+import { AddPersonModal } from "../AddContentForms/AddPersonForm";
+import { EditMovieModal } from "../SelectedContentEditForms/EditMovieModal"; // Új import az edit movie modalhoz
+
 import { FilePenLine } from "lucide-react";
 
 const SelectedMovieContentPane = () => {

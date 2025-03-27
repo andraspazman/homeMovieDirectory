@@ -16,13 +16,13 @@ interface Item {
   description: string;
   language: string;
   releaseYear: number;
-  isMovie : boolean;
+  isMovie: boolean;
 }
 
 interface ContentPaneProps {
   selectedGenres: string[];
   selectedCountries: string[];
-  selectedDecades: string[];  // Új prop: kiválasztott évtizedek
+  selectedDecades: string[];  // Sidebar által beállított évtized szűrés
 }
 
 const ContentPane = ({ selectedGenres, selectedCountries, selectedDecades }: ContentPaneProps) => {
@@ -32,9 +32,10 @@ const ContentPane = ({ selectedGenres, selectedCountries, selectedDecades }: Con
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
 
-  // Új szűrési állapotok a ContentPane-ben (plusz nyelv és műfaj szűrés)
+  // Lokális szűrési állapotok (dropdown menük)
   const [filterLanguage, setFilterLanguage] = useState<string>("");
   const [filterGenre, setFilterGenre] = useState<string>("");
+  const [filterYear, setFilterYear] = useState<string>(""); // dropdown az évre
   const [orderBy, setOrderBy] = useState<string>("desc"); // Alapértelmezett: év csökkenő
 
   // Pagination állapotok
@@ -66,7 +67,14 @@ const ContentPane = ({ selectedGenres, selectedCountries, selectedDecades }: Con
       });
   }, [endpoint]);
 
-  // Szűrés: a genre, language, country szűrők mellett bevezetjük a decade szűrést
+  // Generáljuk a release year opciókat a jelenlegi évtől 1900-ig, csökkenő sorrendben
+  const currentYear = new Date().getFullYear();
+  const yearOptions = [];
+  for (let y = currentYear; y >= 1900; y--) {
+    yearOptions.push(<option key={y} value={y}>{y}</option>);
+  }
+
+  // Szűrés: a genre, language, country, év és évtized szűrés is érvényesül
   const filteredItems = items.filter((item) => {
     const genreMatch =
       (selectedGenres.length === 0 || selectedGenres.includes(item.genre)) &&
@@ -75,27 +83,25 @@ const ContentPane = ({ selectedGenres, selectedCountries, selectedDecades }: Con
       selectedCountries.length === 0 || selectedCountries.includes(item.description);
     const languageMatch =
       filterLanguage === "" || item.language === filterLanguage;
+    const yearMatch =
+      filterYear === "" || String(item.releaseYear) === filterYear;
     const decadeMatch =
-      // Ha nincs kiválasztott évtized, akkor minden elem bekerül
       selectedDecades.length === 0 ||
-      // Ellenőrizzük, hogy az item.releaseYear beleesik-e valamelyik kiválasztott intervallumba
       selectedDecades.some((decadeRange) => {
         const [upper, lower] = decadeRange.split('-').map(Number);
         return item.releaseYear <= upper && item.releaseYear >= lower;
       });
 
     if (location.pathname.includes("movies")) {
-      return item.isMovie === true && genreMatch && countryMatch && languageMatch && decadeMatch;
+      return item.isMovie === true && genreMatch && countryMatch && languageMatch && yearMatch && decadeMatch;
     }
-    return genreMatch && countryMatch && languageMatch && decadeMatch;
+    return genreMatch && countryMatch && languageMatch && yearMatch && decadeMatch;
   });
 
-  // Rendezés az év alapján: csökkenő vagy növekvő sorrendben
   const sortedItems = [...filteredItems].sort((a, b) => {
     return orderBy === "desc" ? b.releaseYear - a.releaseYear : a.releaseYear - b.releaseYear;
   });
 
-  // Pagination logika
   const totalPages = Math.ceil(sortedItems.length / itemsPerPage);
   const currentItems = sortedItems.slice(
     (currentPage - 1) * itemsPerPage,
@@ -121,12 +127,20 @@ const ContentPane = ({ selectedGenres, selectedCountries, selectedDecades }: Con
     return <Text color="red.500">{error}</Text>;
   }
 
-  // Meghatározzuk a részletes oldal prefixét
   const detailRoutePrefix = location.pathname.includes("movies") ? "/movie" : "/series";
+
+  // Reset function a lokális filter állapotokhoz
+  const resetFilters = () => {
+    setFilterLanguage("");
+    setFilterGenre("");
+    setFilterYear("");
+    setOrderBy("desc");
+  };
 
   return (
     <>
-      {/* Filter Panel */}
+
+      {/* Filter Panel: Dropdown menus + Reset gomb */}
       <Flex justifyContent="center" mb={4}>
         <HStack spacing={4} paddingTop="2%">
           <Select 
@@ -138,6 +152,10 @@ const ContentPane = ({ selectedGenres, selectedCountries, selectedDecades }: Con
             <option value="hungarian">Hungarian</option>
             <option value="french">French</option>
             <option value="spanish">Spanish</option>
+            <option value="german">German</option>
+            <option value="italian">Italian</option>
+            <option value="japanese">Japanese</option>
+            <option value="chinese">Chinese</option>
           </Select>
           <Select 
             placeholder="Genre" 
@@ -145,17 +163,33 @@ const ContentPane = ({ selectedGenres, selectedCountries, selectedDecades }: Con
             onChange={(e) => setFilterGenre(e.target.value)}
           >
             <option value="action">Action</option>
-            <option value="Comedy">Comedy</option>
+            <option value="comedy">Comedy</option>
             <option value="drama">Drama</option>
+            <option value="horror">Horror</option>
+            <option value="animation">Animation</option>
+            <option value="sci-fi">Sci-Fi</option>
+            <option value="documentary">Documentary</option>
+            <option value="thriller">Thriller</option>
+          </Select>
+          <Select 
+            placeholder="Year" 
+            value={filterYear} 
+            onChange={(e) => setFilterYear(e.target.value)}
+          >
+            {yearOptions}
           </Select>
           <Select 
             placeholder="Order by Year" 
             value={orderBy} 
             onChange={(e) => setOrderBy(e.target.value)}
+            maxW="200px"
           >
             <option value="desc">Year Descending</option>
             <option value="asc">Year Ascending</option>
           </Select>
+          <Button onClick={resetFilters} colorScheme="red" variant="outline" pr={"10%"} pl={"10%"}>
+            Reset Filters
+          </Button>
         </HStack>
       </Flex>
 
@@ -182,7 +216,7 @@ const ContentPane = ({ selectedGenres, selectedCountries, selectedDecades }: Con
       </SimpleGrid>
 
       {/* Pagination Controls */}
-      <Flex justifyContent="center" alignItems="center" mt={4} paddingBottom={"2%"}>
+      <Flex justifyContent="center" alignItems="center" mt={4} pb="2%">
         <Button 
           onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
           disabled={currentPage === 1}
