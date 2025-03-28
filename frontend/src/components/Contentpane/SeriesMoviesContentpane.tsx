@@ -176,7 +176,7 @@ const ContentPane = ({ selectedGenres, selectedCountries, selectedDecades }: Con
             {yearOptions}
           </Select>
           <Select 
-            placeholder="Order by Year" 
+            placeholder="" 
             value={orderBy} 
             onChange={(e) => setOrderBy(e.target.value)}
             maxW="200px"
@@ -204,10 +204,12 @@ const ContentPane = ({ selectedGenres, selectedCountries, selectedDecades }: Con
               alt={item.title}
               className={styles.image}
             />
-            <Box className={styles.infoBox}>
-              <Text className={styles.title}>{item.title}</Text>
-              <Text className={styles.genre}>{item.genre}</Text>
-            </Box>
+            <Box ml={"3%"} className={styles.infoBox}>
+                <Text className={styles.title}>{item.title}</Text>
+                <Box>
+                  <Text className={styles.genre}>{item.releaseYear}</Text>
+                </Box>
+          </Box>
           </GridItem>
         ))}
       </SimpleGrid>

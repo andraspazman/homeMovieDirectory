@@ -33,8 +33,10 @@ export default function AuthModal({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState(""); // Új state a hibák számára
 
   const handleLogin = async () => {
+    setErrorMessage("");
     try {
       const response = await axios.post(
         "https://localhost:7204/login",
@@ -50,7 +52,6 @@ export default function AuthModal({
           ? "Admin"
           : "User";
       
-      // Beállítjuk a tokenből kapott alapadatokat
       const basicUserData = {
         id: decoded.sub,
         username: decoded.email,
@@ -59,7 +60,6 @@ export default function AuthModal({
       };
       setUser(basicUserData);
       
-      // Majd lekérjük a teljes user adatokat, pl. a /users endpoint segítségével
       const fullUserResponse = await axios.get(`https://localhost:7204/users/${decoded.email}`);
       setUser(fullUserResponse.data);
       
@@ -67,18 +67,45 @@ export default function AuthModal({
       onClose();
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        alert(error.response?.data?.message || "Login failed");
+        setErrorMessage(error.response?.data?.message || "Login failed");
       } else {
-        alert("An unexpected error occurred");
+        setErrorMessage("An unexpected error occurred");
       }
     }
   };
 
   const handleRegistration = async () => {
+    setErrorMessage(""); // Előző hibaüzenet törlése
+
+    // Jelszó megegyezés ellenőrzése
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      setErrorMessage("Passwords do not match!");
       return;
     }
+
+    // Normal name ellenőrzése: ne tartalmazzon számot
+    if (/\d/.test(normalName)) {
+      setErrorMessage("Normal name should not contain numbers!");
+      return;
+    }
+
+    // Email formátum ellenőrzése
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setErrorMessage("Invalid email format! Please use something@something.com");
+      return;
+    }
+
+    // Jelszó hosszának és tartalmának ellenőrzése
+    if (password.length < 8) {
+      setErrorMessage("Password must be at least 8 characters long!");
+      return;
+    }
+    if (!(/[a-z]/.test(password) && /[A-Z]/.test(password))) {
+      setErrorMessage("Password must contain both lowercase and uppercase letters!");
+      return;
+    }
+
     try {
       await axios.post(
         API_REGISTER_URL,
@@ -94,9 +121,9 @@ export default function AuthModal({
       onClose();
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        alert(error.response?.data?.message || "Registration failed");
+        setErrorMessage(error.response?.data?.message || "Registration failed");
       } else {
-        alert("An unexpected error occurred");
+        setErrorMessage("An unexpected error occurred");
       }
     }
   };
@@ -160,6 +187,8 @@ export default function AuthModal({
                 </FormControl>
               </>
             )}
+            {/* Hibák megjelenítése a modalban */}
+            {errorMessage && <Text color="red.500">{errorMessage}</Text>}
             <Button
               colorScheme="blue"
               onClick={isRegistration ? handleRegistration : handleLogin}
@@ -174,7 +203,10 @@ export default function AuthModal({
               <Button
                 variant="link"
                 colorScheme="blue"
-                onClick={() => setIsRegistration(!isRegistration)}
+                onClick={() => {
+                  setIsRegistration(!isRegistration);
+                  setErrorMessage("");
+                }}
               >
                 {isRegistration ? "Login" : "Registration"}
               </Button>

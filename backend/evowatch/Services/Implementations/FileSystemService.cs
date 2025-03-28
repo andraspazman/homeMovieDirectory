@@ -1,4 +1,8 @@
-﻿namespace evoWatch.Services.Implementations
+﻿using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.Drawing;
+
+namespace evoWatch.Services.Implementations
 {
     internal class FileSystemService : IFileSystemService
     {
@@ -65,14 +69,14 @@
             File.Delete(filepath);
         }
 
-        
+
         public async Task<string?> SaveFileAsync(IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
                 return null;
             }
-            
+
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
             if (string.IsNullOrEmpty(extension) || !_permittedExtensions.Contains(extension))
             {
@@ -87,9 +91,35 @@
             var fileName = Guid.NewGuid().ToString() + extension;
             var filePath = Path.Combine(_externalFolderPath, fileName);
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            // Betöltjük a képet a bejövő streamből
+            using (var inputStream = file.OpenReadStream())
+            using (var originalImage = Image.FromStream(inputStream))
             {
-                await file.CopyToAsync(stream);
+                int newWidth = 480;
+                int newHeight = 800;
+
+                // Új Bitmap létrehozása a kívánt méretekkel
+                using (var resizedImage = new Bitmap(newWidth, newHeight))
+                {
+                    using (var graphics = Graphics.FromImage(resizedImage))
+                    {
+                        // Minőségi beállítások
+                        graphics.CompositingQuality = CompositingQuality.HighQuality;
+                        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                        graphics.CompositingMode = CompositingMode.SourceCopy;
+
+                        // Átméretezés
+                        graphics.DrawImage(originalImage, 0, 0, newWidth, newHeight);
+                    }
+
+                    // Kép formátum meghatározása a kiterjesztés alapján
+                    ImageFormat imageFormat = extension == ".png"
+                        ? ImageFormat.Png
+                        : ImageFormat.Jpeg;
+
+                    // Átméretezett kép mentése
+                    resizedImage.Save(filePath, imageFormat);
+                }
             }
 
             return fileName;
