@@ -14,6 +14,7 @@ namespace evoWatch.DTOs
         public string? VideoPath { get; set; }
         public string? CoverImagePath { get; set; }
         public bool IsMovie { get; set; }
+        public string? ImdbRating { get; set; }
 
         public static MovieDTO CreateFromEpisodeDocument(Episode episode)
         {
@@ -28,7 +29,8 @@ namespace evoWatch.DTOs
                 Award = episode.Award,
                 VideoPath = episode.VideoPath,
                 CoverImagePath = episode.CoverImagePath,
-                IsMovie = episode.IsMovie
+                IsMovie = episode.IsMovie,
+                ImdbRating = "N/A"
             };
         }
     }

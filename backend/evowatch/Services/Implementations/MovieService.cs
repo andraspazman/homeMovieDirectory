@@ -33,8 +33,11 @@ namespace evoWatch.Services.Implementations
         public async Task<MovieDTO> GetMovieByIdAsync(Guid id)
         {
             var movie = await _episodesRepository.GetEpisodeByIdAsync(id);
-            if (movie == null || !movie.IsMovie) throw new MovieNotFoundException();
-            return MovieDTO.CreateFromEpisodeDocument(movie);
+            if(movie == null) throw new MovieNotFoundException();
+            
+            var dto = MovieDTO.CreateFromEpisodeDocument(movie);
+            dto.ImdbRating = await GetImdbRatingAsync(dto.Title);
+            return dto;
         }
 
         public async Task<IEnumerable<MovieDTO>> GetMoviesAsync()
@@ -115,6 +118,28 @@ namespace evoWatch.Services.Implementations
             var existingMovie = await _episodesRepository.GetEpisodeByIdAsync(id);
             if (existingMovie == null || !existingMovie.IsMovie) throw new MovieNotFoundException();
             return await _episodesRepository.DeleteEpisodeAsync(existingMovie);
+        }
+
+        private async Task<string> GetImdbRatingAsync(string title)
+        {
+            using (var client = new HttpClient())
+            {
+                var apiKey = Environment.GetEnvironmentVariable("OMDB_API_KEY");
+                var url = $"https://www.omdbapi.com/?apikey={apiKey}&t={Uri.EscapeDataString(title)}&type=movie";
+
+                var response = await client.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+
+                    dynamic data = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
+                    if (data.Response == "True" && data.imdbRating != null)
+                    {
+                        return data.imdbRating;
+                    }
+                }
+                return "N/A";
+            }
         }
     }
 }

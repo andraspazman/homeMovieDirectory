@@ -9,5 +9,6 @@ export interface MovieDTO {
     videoPath?: string;
     coverImagePath?: string;
     isMovie: boolean;
+    imdbRating : string;
 }
   

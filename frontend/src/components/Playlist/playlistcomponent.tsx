@@ -239,9 +239,6 @@ const PlaylistGrid: React.FC = () => {
               <Box p={2}>
                 <Text fontWeight="bold">{item.title}</Text>
                 <Text>{item.genre}</Text>
-                <Text fontSize="sm" color="gray.600">
-                  {item.isMovie ? "Movie" : "Series"} ID: {item.contentId}
-                </Text>
               </Box>
             </Box>
           </GridItem>

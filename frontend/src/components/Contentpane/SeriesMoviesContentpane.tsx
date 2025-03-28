@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useLocation, useNavigate } from "react-router-dom"; // useNavigate importálása
+import { useLocation, useNavigate } from "react-router-dom";
 import { 
   SimpleGrid, Box, Image, Text, Skeleton, SkeletonText, GridItem, 
-  Flex, HStack, Select, Button, Heading 
+  Flex, HStack, Select, Button 
 } from "@chakra-ui/react";
 import styles from "./Contentpane.module.scss";
 
-// Kiterjesztett típusdefiníció, amely tartalmazza a language és year mezőket is
+// Kiterjesztett típusdefiníció
 interface Item {
   id: string;
   title: string;
@@ -22,27 +22,27 @@ interface Item {
 interface ContentPaneProps {
   selectedGenres: string[];
   selectedCountries: string[];
-  selectedDecades: string[];  // Sidebar által beállított évtized szűrés
+  selectedDecades: string[];
 }
 
 const ContentPane = ({ selectedGenres, selectedCountries, selectedDecades }: ContentPaneProps) => {
   const location = useLocation();
-  const navigate = useNavigate(); // useNavigate inicializálása
+  const navigate = useNavigate();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
 
-  // Lokális szűrési állapotok (dropdown menük)
+  // Lokális szűrési állapotok
   const [filterLanguage, setFilterLanguage] = useState<string>("");
   const [filterGenre, setFilterGenre] = useState<string>("");
-  const [filterYear, setFilterYear] = useState<string>(""); // dropdown az évre
-  const [orderBy, setOrderBy] = useState<string>("desc"); // Alapértelmezett: év csökkenő
+  const [filterYear, setFilterYear] = useState<string>(""); 
+  const [orderBy, setOrderBy] = useState<string>("desc");
 
-  // Pagination állapotok
+  // Pagination
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 10;
 
-  // A jelenlegi URL alapján eldöntjük, melyik endpoint-ot hívjuk meg
+  // Endpoint kiválasztása
   let endpoint = "";
   if (location.pathname.includes("movies")) {
     endpoint = "https://localhost:7204/movie";
@@ -58,7 +58,7 @@ const ContentPane = ({ selectedGenres, selectedCountries, selectedDecades }: Con
       .then((response) => {
         setItems(response.data);
         setLoading(false);
-        setCurrentPage(1); // Reset pagination if endpoint changes
+        setCurrentPage(1);
       })
       .catch((err) => {
         console.error("Error fetching data:", err);
@@ -67,14 +67,18 @@ const ContentPane = ({ selectedGenres, selectedCountries, selectedDecades }: Con
       });
   }, [endpoint]);
 
-  // Generáljuk a release year opciókat a jelenlegi évtől 1900-ig, csökkenő sorrendben
+  // Generáljuk a release year opciókat (jelenlegi évtől 1900-ig)
   const currentYear = new Date().getFullYear();
   const yearOptions = [];
   for (let y = currentYear; y >= 1900; y--) {
     yearOptions.push(<option key={y} value={y}>{y}</option>);
   }
 
-  // Szűrés: a genre, language, country, év és évtized szűrés is érvényesül
+  // Lehetőségek listája a Language és Genre szűréshez
+  const languages = ["english", "hungarian", "french", "spanish", "german", "italian", "japanese", "chinese"];
+  const genres = ["action", "comedy", "drama", "horror", "animation", "sci-fi", "documentary", "thriller"];
+
+  // Szűrés különböző feltételek alapján
   const filteredItems = items.filter((item) => {
     const genreMatch =
       (selectedGenres.length === 0 || selectedGenres.includes(item.genre)) &&
@@ -129,7 +133,7 @@ const ContentPane = ({ selectedGenres, selectedCountries, selectedDecades }: Con
 
   const detailRoutePrefix = location.pathname.includes("movies") ? "/movie" : "/series";
 
-  // Reset function a lokális filter állapotokhoz
+  // Reset a szűrők alaphelyzetbe állításához
   const resetFilters = () => {
     setFilterLanguage("");
     setFilterGenre("");
@@ -139,8 +143,7 @@ const ContentPane = ({ selectedGenres, selectedCountries, selectedDecades }: Con
 
   return (
     <>
-
-      {/* Filter Panel: Dropdown menus + Reset gomb */}
+      {/* Filter Panel */}
       <Flex justifyContent="center" mb={4}>
         <HStack spacing={4} paddingTop="2%">
           <Select 
@@ -148,28 +151,22 @@ const ContentPane = ({ selectedGenres, selectedCountries, selectedDecades }: Con
             value={filterLanguage} 
             onChange={(e) => setFilterLanguage(e.target.value)}
           >
-            <option value="english">English</option>
-            <option value="hungarian">Hungarian</option>
-            <option value="french">French</option>
-            <option value="spanish">Spanish</option>
-            <option value="german">German</option>
-            <option value="italian">Italian</option>
-            <option value="japanese">Japanese</option>
-            <option value="chinese">Chinese</option>
+            {languages.map((lang) => (
+              <option key={lang} value={lang}>
+                {lang.charAt(0).toUpperCase() + lang.slice(1)}
+              </option>
+            ))}
           </Select>
           <Select 
             placeholder="Genre" 
             value={filterGenre} 
             onChange={(e) => setFilterGenre(e.target.value)}
           >
-            <option value="action">Action</option>
-            <option value="comedy">Comedy</option>
-            <option value="drama">Drama</option>
-            <option value="horror">Horror</option>
-            <option value="animation">Animation</option>
-            <option value="sci-fi">Sci-Fi</option>
-            <option value="documentary">Documentary</option>
-            <option value="thriller">Thriller</option>
+            {genres.map((g) => (
+              <option key={g} value={g}>
+                {g.charAt(0).toUpperCase() + g.slice(1)}
+              </option>
+            ))}
           </Select>
           <Select 
             placeholder="Year" 
@@ -187,7 +184,7 @@ const ContentPane = ({ selectedGenres, selectedCountries, selectedDecades }: Con
             <option value="desc">Year Descending</option>
             <option value="asc">Year Ascending</option>
           </Select>
-          <Button onClick={resetFilters} colorScheme="red" variant="outline" pr={"10%"} pl={"10%"}>
+          <Button onClick={resetFilters} colorScheme="red" variant="outline" pl={"10%"} pr={"10%"}>
             Reset Filters
           </Button>
         </HStack>
