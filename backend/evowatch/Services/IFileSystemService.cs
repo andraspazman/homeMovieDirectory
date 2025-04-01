@@ -7,6 +7,7 @@
         void Initialize(string basePath);
         void Delete(string filename);
         Task<string?> SaveFileAsync(IFormFile file);
+        Task DeleteFileAsync(string filename);
 
     }
 }

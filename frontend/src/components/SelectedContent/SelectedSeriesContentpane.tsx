@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useToast } from "@chakra-ui/react";
 import * as api from "../../utils/ApiClient";
 import {Flex,Box,Image,Text,Spinner,Heading,Button,Modal, ModalOverlay,ModalContent,ModalHeader,ModalCloseButton,ModalBody,useDisclosure,} from "@chakra-ui/react";
-import { FilePenLine } from "lucide-react";
+import { FilePenLine, Star } from "lucide-react";
 import styles from "./SelectedContentpane.module.scss";
 import { SeriesDTO } from "../../types/SeriesDTO";
 import { EpisodeDTO } from "../../types/EpisodeDTO";
@@ -201,7 +201,12 @@ const SelectedSeriesContentPane = () => {
 
   const handleWatchNow = (epId?: string) => {
     if (!isLoggedIn) {
-      alert("Login or register to watch");
+      toast({
+        title: "Login or register to watch",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
       return;
     }
     if (epId) {
@@ -271,16 +276,23 @@ const SelectedSeriesContentPane = () => {
 
   return (
     <Box>
-      <Flex className={styles.topSection}>
+      <Flex className={styles.topSection}ml={"10%"} width={"80%"}>
+        
         <Box className={styles.imageContainer}>
+           
           <Image src={`https://localhost:7204/images/${item.coverImagePath}`} alt={item.title} className={styles.coverImage} />
           {isLoggedIn && (
                         <Button colorScheme="green" onClick={handleAddToPlaylist} mt={2}>
                           Add to Playlist
                         </Button>
             )}
+
+            
         </Box>
         <Box className={styles.detailsContainer}>
+        <Flex align="center" ml="70%"  ><Text size="xl"  p="1%">{item.imdbRating}</Text>
+                        <Star size={20} color="#e0d910" strokeWidth={3} style={{ marginLeft: "0.5rem" }} /><Text as="strong" ml="0.5rem">/10</Text>
+                        </Flex>
           <Heading size="xl" mb={3}> {item.title}
             {isLoggedIn && (
               <Button size="sm" colorScheme="yellow" ml="2" onClick={() => openEditSeries(item)}><FilePenLine /></Button>
@@ -290,6 +302,7 @@ const SelectedSeriesContentPane = () => {
           <Text><strong>Year:</strong> {item.releaseYear}</Text>
           <Text><strong>Genre:</strong> {item.genre}</Text>
           <Text><strong>Description:</strong> {item.description}</Text>
+          
           <ProductionCompany
             name={localProductionCompany ? localProductionCompany.name : undefined}
             website={localProductionCompany ? localProductionCompany.website : undefined}

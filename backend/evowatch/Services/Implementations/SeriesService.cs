@@ -16,6 +16,7 @@ namespace evoWatch.Services.Implementations
         private readonly IMovieService _movieService;
         private readonly IWebHostEnvironment _env;
         private readonly IFileSystemService _fileService;
+        private readonly IImdbRatingService _imdbRatingService;
 
         public SeriesService(  
             ISeriesRepository seriesRepository,
@@ -23,7 +24,8 @@ namespace evoWatch.Services.Implementations
             IWebHostEnvironment env, 
             IFileSystemService fileService, 
             ISeasonsRepository seasonsRepository,
-            IEpisodesRepository _episodesRepository
+            IEpisodesRepository _episodesRepository,
+            IImdbRatingService imdbRatingService
             )
 
         {
@@ -32,12 +34,21 @@ namespace evoWatch.Services.Implementations
             _movieService = movieService;
             _env = env;
             _fileService = fileService;
+            _imdbRatingService = imdbRatingService;
         }
 
         public async Task<SeriesDTO> GetSeriesByIdAsync(Guid id)
         {
-            var series = await _seriesRepository.GetSeriesByIdAsync(id) ?? throw new SeriesNotFoundException();
-            return SeriesDTO.CreateFromSeriesDocument(series);
+            var series = await _seriesRepository.GetSeriesByIdAsync(id)
+                         ?? throw new SeriesNotFoundException();
+
+            // DTO létrehozása alapadatokkal
+            var seriesDto = SeriesDTO.CreateFromSeriesDocument(series);
+
+            // IMDb rating lekérése a series címével, "series" típus megadásával
+            seriesDto.ImdbRating = await _imdbRatingService.GetImdbRatingAsync(series.Title);
+
+            return seriesDto;
         }
 
         public async Task<SeriesDTO> AddSeriesAsync(SeriesDTO series, IFormFile? coverImage)
@@ -85,7 +96,12 @@ namespace evoWatch.Services.Implementations
 
             if (coverImage != null && coverImage.Length > 0)
             {
-                // Delete previous picture
+
+                if (!string.IsNullOrEmpty(existingSeries.CoverImagePath))
+                {
+                    await _fileService.DeleteFileAsync(existingSeries.CoverImagePath);
+                }
+
                 existingSeries.CoverImagePath = await _fileService.SaveFileAsync(coverImage);
             }
 
@@ -103,20 +119,16 @@ namespace evoWatch.Services.Implementations
         {
             
             var series = await _seriesRepository.GetSeriesWithSeasonsAndEpisodesByIdAsync(seriesId);
-            if (series == null)
-                throw new SeriesNotFoundException();
+            if (series == null)  throw new SeriesNotFoundException();
 
             
             var season = series.Seasons.FirstOrDefault(s => s.SeasonNumber == 1);
-            if (season == null)
-                throw new SeasonNotFoundException();
+            if (season == null) throw new SeasonNotFoundException();
 
             
-            var ep1Episode = season.Episodes
-                .FirstOrDefault(e => e.Title.Trim().IndexOf("EP1", StringComparison.OrdinalIgnoreCase) >= 0);
+            var ep1Episode = season.Episodes.FirstOrDefault(e => e.Title.Trim().IndexOf("EP1", StringComparison.OrdinalIgnoreCase) >= 0);
 
-            if (ep1Episode == null)
-                throw new EpisodeNotFoundException();
+            if (ep1Episode == null)  throw new EpisodeNotFoundException();
 
             return new EpisodeIdDTO { EpisodeId = ep1Episode.Id };
         }

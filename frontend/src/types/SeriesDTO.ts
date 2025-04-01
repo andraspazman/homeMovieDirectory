@@ -6,4 +6,5 @@ export interface SeriesDTO {
     finalYear?: number;
     description: string;
     coverImagePath?: string;
+    imdbRating : string;
 }

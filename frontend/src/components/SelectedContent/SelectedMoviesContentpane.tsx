@@ -136,6 +136,19 @@ const SelectedMovieContentPane = () => {
     });
   };
 
+  const handleWatchNow = () => {
+    if (isLoggedIn) {
+      onOpen();
+    } else {
+      toast({
+        title: "Login or register to watch",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   // Function to add the current movie to the user's playlist.
   const handleAddToPlaylist = async () => {
     if (!user || !movie) return;
@@ -314,9 +327,9 @@ const SelectedMovieContentPane = () => {
             mt="5%"
           />
           <Stack spacing={2} mt={2}>
-            <Button colorScheme="blue" onClick={onOpen} ml={"5%"} width={"60%"}>
-              Watch now
-            </Button>
+          <Button colorScheme="blue" onClick={handleWatchNow} ml={"5%"} width={"60%"}>
+                Watch now
+          </Button>
             {isLoggedIn && (
               <Button colorScheme="green" onClick={handleAddToPlaylist} ml={"5%"} width={"60%"}>
                 Add to Playlist

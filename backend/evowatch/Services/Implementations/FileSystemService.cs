@@ -37,6 +37,7 @@ namespace evoWatch.Services.Implementations
 
             return File.OpenRead(filepath);
         }
+
         public async Task WriteAsync(string filename, Stream stream)
         {
             if (_basePath is null)
@@ -52,6 +53,7 @@ namespace evoWatch.Services.Implementations
                 await stream.CopyToAsync(fileStream);
             }
         }
+
         public void Delete(string filename)
         {
             if (_basePath is null)
@@ -68,7 +70,6 @@ namespace evoWatch.Services.Implementations
 
             File.Delete(filepath);
         }
-
 
         public async Task<string?> SaveFileAsync(IFormFile file)
         {
@@ -91,38 +92,49 @@ namespace evoWatch.Services.Implementations
             var fileName = Guid.NewGuid().ToString() + extension;
             var filePath = Path.Combine(_externalFolderPath, fileName);
 
-            // Betöltjük a képet a bejövő streamből
+            // Load img from input stream
             using (var inputStream = file.OpenReadStream())
             using (var originalImage = Image.FromStream(inputStream))
             {
                 int newWidth = 480;
                 int newHeight = 800;
 
-                // Új Bitmap létrehozása a kívánt méretekkel
+                // Create new bitman with new sizes
                 using (var resizedImage = new Bitmap(newWidth, newHeight))
                 {
                     using (var graphics = Graphics.FromImage(resizedImage))
                     {
-                        // Minőségi beállítások
+                        // Qualiyy settigns 
                         graphics.CompositingQuality = CompositingQuality.HighQuality;
                         graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
                         graphics.CompositingMode = CompositingMode.SourceCopy;
 
-                        // Átméretezés
+                        //resizeing
                         graphics.DrawImage(originalImage, 0, 0, newWidth, newHeight);
                     }
 
-                    // Kép formátum meghatározása a kiterjesztés alapján
-                    ImageFormat imageFormat = extension == ".png"
-                        ? ImageFormat.Png
-                        : ImageFormat.Jpeg;
 
-                    // Átméretezett kép mentése
+                    ImageFormat imageFormat = extension == ".png" ? ImageFormat.Png: ImageFormat.Jpeg;
+
                     resizedImage.Save(filePath, imageFormat);
                 }
             }
 
             return fileName;
+        }
+
+        public async Task DeleteFileAsync(string filename)
+        {
+
+            string filepath = Path.Combine(_externalFolderPath, filename);
+
+            if (!File.Exists(filepath))
+            {
+                throw new FileNotFoundException("File not found.", filepath);
+            }
+
+       
+            await Task.Run(() => File.Delete(filepath));
         }
     }
 }

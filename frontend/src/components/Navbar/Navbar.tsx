@@ -54,6 +54,7 @@ const NavBar: FunctionComponent<NavBarProps> = ({
 
   const handleLogout = async () => {
     try {
+      navigate("/");
       await logout();
     } catch (error) {
       console.error("Logout error:", error);
@@ -72,7 +73,7 @@ const NavBar: FunctionComponent<NavBarProps> = ({
             onClick={toggleSidebar}
             aria-label="Toggle Sidebar"
           />
-          <Text fontWeight="bold" fontSize="lg">
+          <Text fontWeight="bold" fontSize="lg" onClick={() => navigate("/")}>
             homeFlix
           </Text>
         </Flex>

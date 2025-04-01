@@ -92,6 +92,8 @@ builder.Services.AddEvoWatch();
 builder.Services.AddEvoWatchDatabase();
 builder.Services.AddJwtAuthentication(config);
 
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
