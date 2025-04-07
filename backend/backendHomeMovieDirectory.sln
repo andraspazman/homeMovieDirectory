@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "evoWatch.Database", "evoWat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "evoWatch", "evowatch\evoWatch.csproj", "{F8F37D1C-45E7-44AA-BB6F-895606A0F50F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "movieDirectoryBackend.Test", "movieDirectoryBackend.Test\movieDirectoryBackend.Test.csproj", "{22972199-7C3A-49FC-8D21-D38BE2EB15B9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{F8F37D1C-45E7-44AA-BB6F-895606A0F50F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F8F37D1C-45E7-44AA-BB6F-895606A0F50F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F8F37D1C-45E7-44AA-BB6F-895606A0F50F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22972199-7C3A-49FC-8D21-D38BE2EB15B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22972199-7C3A-49FC-8D21-D38BE2EB15B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22972199-7C3A-49FC-8D21-D38BE2EB15B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22972199-7C3A-49FC-8D21-D38BE2EB15B9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
