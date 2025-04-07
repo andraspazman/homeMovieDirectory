@@ -1,19 +1,45 @@
 import React, { useEffect, useState } from "react";
-import {Box,Heading,Table,Thead,Tbody, Tr, Th,Td, Spinner,Text,TableContainer,Image,Button,Flex,Input,useToast,} from "@chakra-ui/react";
+import {
+  Box,
+  Heading,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Spinner,
+  Text,
+  TableContainer,
+  Image,
+  Button,
+  Flex,
+  Input,
+  useToast,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+} from "@chakra-ui/react";
 import axios from "axios";
 import EditUserModal from "../ManageUsersPane/EditUserModal"; // igazítsd az elérési utat
 import { FilePenLine } from "lucide-react";
+import { useUser } from "../../context/UserContext";
 
 interface User {
   id: string;
   normalName: string;
   email: string;
   isActive: boolean;
-  role: string;
+  role: "Admin" | "User";
   imageId?: string | null;
 }
 
 export const ManageUsers: React.FC = () => {
+  const { user: loggedInUser } = useUser();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
@@ -26,11 +52,14 @@ export const ManageUsers: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 5;
 
-  // Szűrés: keresés név és email alapján (kis-nagybetű érzéketlen)
-  const filteredUsers = users.filter((user) =>
-    user.normalName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Szűrés: kizárjuk a bejelentkezett user-t, és keresés név és email alapján (kis-nagybetű érzéketlen)
+  const filteredUsers = users.filter((user) => {
+    if (loggedInUser && user.id === loggedInUser.id) return false;
+    return (
+      user.normalName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const paginatedUsers = filteredUsers.slice(
@@ -41,6 +70,10 @@ export const ManageUsers: React.FC = () => {
   // Állapot az aktuálisan szerkesztendő felhasználóhoz és a modal megnyitásához
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
+
+  // Állapot a törléshez (felugró modal)
+  const [selectedUserForDeletion, setSelectedUserForDeletion] = useState<User | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     setLoading(true);
@@ -87,9 +120,49 @@ export const ManageUsers: React.FC = () => {
     });
   };
 
+
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return;
     setCurrentPage(newPage);
+  };
+
+  // Törlés jóváhagyó modal megnyitása
+  const openDeleteModal = (user: User) => {
+    setSelectedUserForDeletion(user);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setSelectedUserForDeletion(null);
+    setIsDeleteModalOpen(false);
+  };
+
+  // Felhasználó törlése az admin-only endpoint használatával
+  const handleDeleteUser = async () => {
+    if (!selectedUserForDeletion) return;
+    try {
+      await axios.delete(`https://localhost:7204/users/admin/${selectedUserForDeletion.id}`);
+      toast({
+        title: "User deleted successfully.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      // Frissítjük a felhasználók listáját
+      setUsers((prev) =>
+        prev.filter((user) => user.id !== selectedUserForDeletion.id)
+      );
+      closeDeleteModal();
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast({
+        title: "Error deleting user.",
+        description: "Something went wrong. Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   if (loading) {
@@ -112,7 +185,7 @@ export const ManageUsers: React.FC = () => {
       <Heading mb={4}>Manage Users</Heading>
       
       {/* Keresőmező */}
-      <Box mb={4} pt={5} pr={"5%"} pl={"5%"} >
+      <Box mb={4} pt="5%" pr="5%" pl="5%">
         <Input
           placeholder="Search by name or email..."
           value={searchTerm}
@@ -173,6 +246,15 @@ export const ManageUsers: React.FC = () => {
                   >
                     <FilePenLine size={17} />
                   </Button>
+                  {/* Delete User gomb */}
+                  <Button
+                    size="xs"
+                    colorScheme="red"
+                    ml={2}
+                    onClick={() => openDeleteModal(user)}
+                  >
+                    Delete
+                  </Button>
                 </Td>
               </Tr>
             ))}
@@ -202,6 +284,28 @@ export const ManageUsers: React.FC = () => {
           onUserUpdated={handleUserUpdated}
         />
       )}
+
+      {/* Delete User Confirmation Modal */}
+      <Modal isOpen={isDeleteModalOpen} onClose={closeDeleteModal} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Confirm User Deletion</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text mb={4}>
+              Are you sure you want to delete the user <strong>{selectedUserForDeletion?.normalName}</strong>? This action cannot be undone.
+            </Text>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={closeDeleteModal}>
+              Cancel
+            </Button>
+            <Button colorScheme="red" onClick={handleDeleteUser}>
+              Delete User
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };

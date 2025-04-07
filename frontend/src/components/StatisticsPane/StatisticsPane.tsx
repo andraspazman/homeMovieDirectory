@@ -20,16 +20,14 @@ interface Movie {
   id: string;
   title: string;
   releaseYear: number;
-  language: string;
-  genre: string; // Make sure your backend includes this field
+  genre: string;
 }
 
 interface Series {
   id: string;
   title: string;
   releaseYear: number;
-  language: string;
-  genre: string; // Also ensure your backend includes genre
+  genre: string;
 }
 
 const StatisticsPane: React.FC = () => {
@@ -55,25 +53,48 @@ const StatisticsPane: React.FC = () => {
     fetchData();
   }, []);
 
-  // Series: counts by year, language, genre
+  // Számoljuk az értékeket (csoportosítjuk év és műfaj szerint)
   const seriesYearCount = countBy(series, "releaseYear");
-  const seriesLangCount = countBy(series, "language");
   const seriesGenreCount = countBy(series, "genre");
-
-  // Movies: counts by year, language, genre
   const movieYearCount = countBy(movies, "releaseYear");
-  const movieLangCount = countBy(movies, "language");
   const movieGenreCount = countBy(movies, "genre");
 
-  // Convert to pie chart data
+  // Átalakítjuk a számításokat százalékos adatokra
   const seriesYearData = pieDataFromMap(seriesYearCount, "Series by Year");
-  const seriesLangData = pieDataFromMap(seriesLangCount, "Series by Language");
   const movieYearData = pieDataFromMap(movieYearCount, "Movies by Year");
-  const movieLangData = pieDataFromMap(movieLangCount, "Movies by Language");
 
-  // Convert to bar chart data
   const seriesGenreBarData = barDataFromMap(seriesGenreCount, "Series by Genre");
   const movieGenreBarData = barDataFromMap(movieGenreCount, "Movies by Genre");
+
+  // Chart tooltip opciók, hogy a százalékok is megjelenjenek
+  const pieOptions = {
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: (context: any) => {
+            const label = context.label || "";
+            const value = context.parsed;
+            return `${label}: ${value}%`;
+          },
+        },
+      },
+    },
+  };
+
+  const barOptions = {
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: (context: any) => {
+            const label = context.label || "";
+            const value = context.parsed.y;
+            return `${label}: ${value}%`;
+          },
+        },
+      },
+    },
+    indexAxis: "x" as const,
+  };
 
   if (loading) {
     return <Box p="2rem">Loading statistics...</Box>;
@@ -83,65 +104,45 @@ const StatisticsPane: React.FC = () => {
     <Box mt={10} p={1}>
       {/* First row: Series */}
       <Grid
-        templateColumns="repeat(3, 300px)"
+        templateColumns="repeat(2, 300px)"
         gap="2rem"
         justifyContent="center"
         mb="2rem"
       >
-        {/* Series by Year (Pie) */}
         <Box>
           <Heading as="h3" size="md" mb="1rem">
             Series (Year)
           </Heading>
-          <Pie data={seriesYearData} />
+          <Pie data={seriesYearData} options={pieOptions} />
         </Box>
 
-        {/* Series by Language (Pie) */}
-        <Box>
-          <Heading as="h3" size="md" mb="1rem">
-            Series (Language)
-          </Heading>
-          <Pie data={seriesLangData} />
-        </Box>
-
-        {/* Series by Genre (Bar) */}
         <Box>
           <Heading as="h3" size="md" mb="1rem">
             Series (Genre)
           </Heading>
-          <Bar data={seriesGenreBarData} />
+          <Bar data={seriesGenreBarData} options={barOptions} />
         </Box>
       </Grid>
 
       {/* Second row: Movies */}
       <Grid
-        templateColumns="repeat(3, 300px)"
+        templateColumns="repeat(2, 300px)"
         gap="2rem"
         justifyContent="center"
         mb="2rem"
       >
-        {/* Movies by Year (Pie) */}
         <Box>
-          <Heading as="h3" size="md" mb="5%">
+          <Heading as="h3" size="md" mb="1rem">
             Movies (Year)
           </Heading>
-          <Pie data={movieYearData} />
+          <Pie data={movieYearData} options={pieOptions} />
         </Box>
 
-        {/* Movies by Language (Pie) */}
         <Box>
-          <Heading as="h3" size="md" mb="5%">
-            Movies (Language)
-          </Heading>
-          <Pie data={movieLangData} />
-        </Box>
-
-        {/* Movies by Genre (Bar) */}
-        <Box>
-          <Heading as="h3" size="md" mb="10%">
+          <Heading as="h3" size="md" mb="1rem">
             Movies (Genre)
           </Heading>
-          <Bar data={movieGenreBarData} />
+          <Bar data={movieGenreBarData} options={barOptions} />
         </Box>
       </Grid>
     </Box>
@@ -153,7 +154,7 @@ export default StatisticsPane;
 /* ---------------- Helper Functions ---------------- */
 
 /**
- * Groups items by a given key, returning { keyValue: count, ... }.
+ * Groups items by a given key, returning an object where each key's value is the count.
  */
 function countBy<T>(items: T[], key: keyof T): Record<string, number> {
   const result: Record<string, number> = {};
@@ -166,17 +167,22 @@ function countBy<T>(items: T[], key: keyof T): Record<string, number> {
 
 /**
  * Generates a Pie chart config from a map { label -> count }.
+ * Converts counts to percentage values.
  */
 function pieDataFromMap(dataMap: Record<string, number>, label: string) {
   const labels = Object.keys(dataMap);
   const values = Object.values(dataMap);
+  const total = values.reduce((acc, curr) => acc + curr, 0);
+  const percentages = values.map((value) =>
+    Number(((value / total) * 100).toFixed(1))
+  );
 
   return {
     labels,
     datasets: [
       {
         label,
-        data: values,
+        data: percentages,
         backgroundColor: [
           "rgba(255, 99, 132, 0.6)",
           "rgba(54, 162, 235, 0.6)",
@@ -194,17 +200,22 @@ function pieDataFromMap(dataMap: Record<string, number>, label: string) {
 
 /**
  * Generates a Bar chart config from a map { label -> count }.
+ * Converts counts to percentage values.
  */
 function barDataFromMap(dataMap: Record<string, number>, label: string) {
   const labels = Object.keys(dataMap);
   const values = Object.values(dataMap);
+  const total = values.reduce((acc, curr) => acc + curr, 0);
+  const percentages = values.map((value) =>
+    Number(((value / total) * 100).toFixed(1))
+  );
 
   return {
     labels,
     datasets: [
       {
         label,
-        data: values,
+        data: percentages,
         backgroundColor: "rgba(74, 154, 207, 0.6)",
         borderColor: "rgba(54, 162, 235, 1)",
         borderWidth: 1,

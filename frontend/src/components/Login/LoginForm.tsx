@@ -1,10 +1,11 @@
 import { useState } from "react";
-import {Button,Input,VStack,FormControl,FormLabel,Modal,ModalOverlay,ModalContent,ModalHeader,ModalBody, ModalCloseButton,Text,} from "@chakra-ui/react";
+import {Button,Input,VStack,FormControl,FormLabel,Modal,ModalOverlay,ModalContent,ModalHeader,ModalBody, ModalCloseButton,Text, Checkbox,} from "@chakra-ui/react";
 import axios from "axios";
 import { jwtDecode } from 'jwt-decode';
 import { useUser } from "../../context/UserContext";
 
 const API_REGISTER_URL = "https://localhost:7204/users";
+
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -33,7 +34,16 @@ export default function AuthModal({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState(""); // Új state a hibák számára
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const clearFields = () => {
+    setNormalName("");
+    setNickname("");
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+  };
 
   const handleLogin = async () => {
     setErrorMessage("");
@@ -46,23 +56,29 @@ export default function AuthModal({
       const token = response.data.token;
       const decoded: TokenPayload = jwtDecode(token);
       console.log("Decoded token:", decoded);
-      
-      const role: "User" | "Admin" =
+
+      const role: "Admin" | "User" =
         decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] === "Admin"
           ? "Admin"
           : "User";
-      
+
       const basicUserData = {
         id: decoded.sub,
         username: decoded.email,
         profilePicture: "",
         role: role,
       };
+
       setUser(basicUserData);
-      
-      const fullUserResponse = await axios.get(`https://localhost:7204/users/${decoded.email}`);
+
+      const fullUserResponse = await axios.get(
+        `https://localhost:7204/users/${decoded.email}`
+      );
       setUser(fullUserResponse.data);
-      
+
+      // Ürítjük az input mezőket sikeres bejelentkezés után
+      clearFields();
+
       onAuthSuccess();
       onClose();
     } catch (error: unknown) {
@@ -75,34 +91,30 @@ export default function AuthModal({
   };
 
   const handleRegistration = async () => {
-    setErrorMessage(""); // Előző hibaüzenet törlése
-
-    // Jelszó megegyezés ellenőrzése
+    setErrorMessage("");
     if (password !== confirmPassword) {
       setErrorMessage("Passwords do not match!");
       return;
     }
-
-    // Normal name ellenőrzése: ne tartalmazzon számot
     if (/\d/.test(normalName)) {
       setErrorMessage("Normal name should not contain numbers!");
       return;
     }
-
-    // Email formátum ellenőrzése
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setErrorMessage("Invalid email format! Please use something@something.com");
+      setErrorMessage(
+        "Invalid email format! Please use something@something.com"
+      );
       return;
     }
-
-    // Jelszó hosszának és tartalmának ellenőrzése
     if (password.length < 8) {
       setErrorMessage("Password must be at least 8 characters long!");
       return;
     }
     if (!(/[a-z]/.test(password) && /[A-Z]/.test(password))) {
-      setErrorMessage("Password must contain both lowercase and uppercase letters!");
+      setErrorMessage(
+        "Password must contain both lowercase and uppercase letters!"
+      );
       return;
     }
 
@@ -117,11 +129,16 @@ export default function AuthModal({
         },
         { withCredentials: true }
       );
-      onAuthSuccess();
-      onClose();
+      // Regisztráció után automatikusan bejelentkezünk:
+      await handleLogin();
+
+      // Sikeres regisztráció után ürítjük az input mezőket
+      clearFields();
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        setErrorMessage(error.response?.data?.message || "Registration failed");
+        setErrorMessage(
+          error.response?.data?.message || "Registration failed"
+        );
       } else {
         setErrorMessage("An unexpected error occurred");
       }
@@ -159,18 +176,26 @@ export default function AuthModal({
             <FormControl>
               <FormLabel>Password</FormLabel>
               <Input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter password"
               />
             </FormControl>
+            <FormControl>
+              <Checkbox
+                isChecked={showPassword}
+                onChange={(e) => setShowPassword(e.target.checked)}
+              >
+                Show Password
+              </Checkbox>
+            </FormControl>
             {isRegistration && (
               <>
                 <FormControl>
-                  <FormLabel>Verify password</FormLabel>
+                  <FormLabel>Verify Password</FormLabel>
                   <Input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Verify password"
@@ -187,14 +212,13 @@ export default function AuthModal({
                 </FormControl>
               </>
             )}
-            {/* Hibák megjelenítése a modalban */}
             {errorMessage && <Text color="red.500">{errorMessage}</Text>}
             <Button
               colorScheme="blue"
               onClick={isRegistration ? handleRegistration : handleLogin}
               width="full"
             >
-              {isRegistration ? "Registration" : "Login"}
+              {isRegistration ? "Register" : "Login"}
             </Button>
             <Text fontSize="sm" textAlign="center">
               {isRegistration
@@ -208,7 +232,7 @@ export default function AuthModal({
                   setErrorMessage("");
                 }}
               >
-                {isRegistration ? "Login" : "Registration"}
+                {isRegistration ? "Login" : "Register"}
               </Button>
             </Text>
           </VStack>
