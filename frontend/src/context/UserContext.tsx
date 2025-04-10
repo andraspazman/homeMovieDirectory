@@ -3,7 +3,7 @@ import  { createContext, useContext, useState } from "react";
 import axios from "axios";
 import { User, UserContextType, UserProviderProps } from "../types/IUser.types";
 
-const UserContext = createContext<UserContextType | undefined>(undefined);
+export const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const useUser = () => {
   const context = useContext(UserContext);
