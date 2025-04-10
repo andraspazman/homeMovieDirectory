@@ -85,7 +85,7 @@ describe('SelectedMovieContentPane', () => {
     const watchButton = await screen.findByRole('button', { name: /watch now/i });
     fireEvent.click(watchButton);
 
-    // Itt meghívás ellenőrzés akkor lenne, ha a handler mockolt
+
   });
 
   it('should call handleAddToPlaylist when add to playlist button is clicked', async () => {
@@ -96,6 +96,5 @@ describe('SelectedMovieContentPane', () => {
     const addToPlaylistButton = await screen.findByRole('button', { name: /add to playlist/i });
     fireEvent.click(addToPlaylistButton);
 
-    // Itt is: handler hívást külön mockkal lehetne ellenőrizni
   });
 });

@@ -17,7 +17,7 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { vi } from "vitest";
 
-// Mock jwt-decode
+// mock jwt-decode
 vi.mock("jwt-decode", () => ({
   jwtDecode: vi.fn(),
 }));

@@ -4,7 +4,6 @@
 /*  //The purpose of the test is to:
 
     - does it actually try to send the data
-
     - the component respond properly, such as closing itself
 */
 
@@ -62,7 +61,7 @@ describe("AddMediaModal component", () => {
     const saveButton = screen.getByRole("button", { name: /Save/i });
     userEvent.click(saveButton); //send form
 
-    // Wait for the form to be successfully submitted and the modal to close
+    // wait for the form to be successfully submitted and the modal to close
     await waitFor(() => {
       expect(onClose).toHaveBeenCalled();
     });
