@@ -1,5 +1,12 @@
 /// <reference types="vitest" />
 
+/* //The purpose of the test is to:
+    - check render login form 
+    - check toggles to registration form
+    - check logs in successfully
+    - check error if passwords do not match
+*/
+
 import { describe, it, expect,beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
