@@ -1,8 +1,7 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import fs from 'fs';
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -12,5 +11,10 @@ export default defineConfig({
     },
     host: 'localhost',
     port: 4200,
+  },
+  test: {
+    globals: true,              
+    environment: 'jsdom',       
+    setupFiles: ['./src/setupTests.ts'],
   },
 });
