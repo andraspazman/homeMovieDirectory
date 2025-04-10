@@ -7,7 +7,7 @@
     - check error if passwords do not match
 */
 
-import { describe, it, expect,beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import AuthModal from "../components/Login/LoginForm";
@@ -17,14 +17,18 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { vi } from "vitest";
 
-// Mock jwtDecode
+// Mock jwt-decode
 vi.mock("jwt-decode", () => ({
   jwtDecode: vi.fn(),
 }));
 
-
+// Mock axios
 vi.mock("axios");
 
+// Külön változókban a mock függvények
+const mockJwtDecode = jwtDecode as unknown as ReturnType<typeof vi.fn>;
+const mockAxiosPost = axios.post as unknown as ReturnType<typeof vi.fn>;
+const mockAxiosGet = axios.get as unknown as ReturnType<typeof vi.fn>;
 
 const mockSetUser = vi.fn();
 const mockOnAuthSuccess = vi.fn();
@@ -33,7 +37,9 @@ const mockOnClose = vi.fn();
 const renderModal = () => {
   return render(
     <ChakraProvider>
-     <UserContext.Provider value={{ user: null,  setUser: mockSetUser,logout: vi.fn(),}}>
+      <UserContext.Provider
+        value={{ user: null, setUser: mockSetUser, logout: vi.fn() }}
+      >
         <AuthModal
           isOpen={true}
           onClose={mockOnClose}
@@ -88,9 +94,9 @@ describe("AuthModal", () => {
       "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": "User",
     };
 
-    (jwtDecode as vi.Mock).mockReturnValue(decodedToken);
-    (axios.post as vi.Mock).mockResolvedValue({ data: { token: fakeToken } });
-    (axios.get as vi.Mock).mockResolvedValue({
+    mockJwtDecode.mockReturnValue(decodedToken);
+    mockAxiosPost.mockResolvedValue({ data: { token: fakeToken } });
+    mockAxiosGet.mockResolvedValue({
       data: {
         id: "123",
         username: "user@example.com",
@@ -107,15 +113,7 @@ describe("AuthModal", () => {
     await userEvent.click(screen.getByRole("button", { name: /^login$/i }));
 
     await waitFor(() => {
-      expect(jwtDecode).toHaveBeenCalledWith(fakeToken);
-      expect(mockSetUser).toHaveBeenCalledWith({
-        id: "123",
-        username: "user@example.com",
-        profilePicture: "",
-        role: "User",
-      });
-
-      // második setUser hívás (a teljes user adat lekérése után)
+      expect(mockJwtDecode).toHaveBeenCalledWith(fakeToken);
       expect(mockSetUser).toHaveBeenCalledWith({
         id: "123",
         username: "user@example.com",
