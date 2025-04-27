@@ -36,5 +36,17 @@ namespace evoWatch.Services.Implementations
 
             return fileName;
         }
+
+        public async Task DeleteVideoAsync(string filename)
+        {
+            var filePath = Path.Combine(_videoDirectory, filename);
+
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException("Video not found.", filePath);
+            }
+
+            await Task.Run(() => File.Delete(filePath));
+        }
     }
 }

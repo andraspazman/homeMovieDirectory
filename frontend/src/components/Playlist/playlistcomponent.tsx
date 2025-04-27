@@ -16,6 +16,7 @@ import {
 import { DeleteIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../../context/UserContext"; // Adjust path as needed
+import axios from "axios";
 
 // Define the interface for a playlist item returned by your playlist API.
 interface PlaylistItemDTO {
@@ -37,7 +38,7 @@ interface ContentDetails {
 }
 
 const PlaylistGrid: React.FC = () => {
-  const { user } = useUser();
+  const { user , setUser } = useUser();
   const navigate = useNavigate();
 
   const [displayItems, setDisplayItems] = useState<ContentDetails[]>([]);
@@ -68,6 +69,8 @@ const PlaylistGrid: React.FC = () => {
       alert(err.message || "An error occurred while deleting the item.");
     }
   };
+  
+
 
   useEffect(() => {
     if (!user) {
@@ -239,9 +242,6 @@ const PlaylistGrid: React.FC = () => {
               <Box p={2}>
                 <Text fontWeight="bold">{item.title}</Text>
                 <Text>{item.genre}</Text>
-                <Text fontSize="sm" color="gray.600">
-                  {item.isMovie ? "Movie" : "Series"} ID: {item.contentId}
-                </Text>
               </Box>
             </Box>
           </GridItem>

@@ -15,8 +15,22 @@ const ProductionCompany: React.FC<ProductionCompanyProps> = ({
         <strong>Production Company:</strong> {name ? name : "n/a"}
       </Text>
       <Text>
-        <strong>Website:</strong> {website ? website : "n/a"}
-      </Text>
+  <strong>Website:</strong>{" "}
+  {website && website !== "n/a" ? (
+    <a
+      href={website.startsWith("http") ? website : `https://${website}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ color: "grey", fontWeight: "bold"}}
+    >
+      {website.startsWith("http")
+        ? website.replace(/^https?:\/\//, "")
+        : website}
+    </a>
+  ) : (
+    "n/a"
+  )}
+</Text>
       {isLoggedIn && (
         <HStack spacing={2} mt={2}>
           {name 

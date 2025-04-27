@@ -1,4 +1,8 @@
-﻿namespace evoWatch.Services.Implementations
+﻿using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.Drawing;
+
+namespace evoWatch.Services.Implementations
 {
     internal class FileSystemService : IFileSystemService
     {
@@ -33,6 +37,7 @@
 
             return File.OpenRead(filepath);
         }
+
         public async Task WriteAsync(string filename, Stream stream)
         {
             if (_basePath is null)
@@ -48,6 +53,7 @@
                 await stream.CopyToAsync(fileStream);
             }
         }
+
         public void Delete(string filename)
         {
             if (_basePath is null)
@@ -65,14 +71,13 @@
             File.Delete(filepath);
         }
 
-        
         public async Task<string?> SaveFileAsync(IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
                 return null;
             }
-            
+
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
             if (string.IsNullOrEmpty(extension) || !_permittedExtensions.Contains(extension))
             {
@@ -87,12 +92,49 @@
             var fileName = Guid.NewGuid().ToString() + extension;
             var filePath = Path.Combine(_externalFolderPath, fileName);
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            // Load img from input stream
+            using (var inputStream = file.OpenReadStream())
+            using (var originalImage = Image.FromStream(inputStream))
             {
-                await file.CopyToAsync(stream);
+                int newWidth = 480;
+                int newHeight = 800;
+
+                // Create new bitman with new sizes
+                using (var resizedImage = new Bitmap(newWidth, newHeight))
+                {
+                    using (var graphics = Graphics.FromImage(resizedImage))
+                    {
+                        // Qualiyy settigns 
+                        graphics.CompositingQuality = CompositingQuality.HighQuality;
+                        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                        graphics.CompositingMode = CompositingMode.SourceCopy;
+
+                        //resizeing
+                        graphics.DrawImage(originalImage, 0, 0, newWidth, newHeight);
+                    }
+
+
+                    ImageFormat imageFormat = extension == ".png" ? ImageFormat.Png: ImageFormat.Jpeg;
+
+                    resizedImage.Save(filePath, imageFormat);
+                }
             }
 
             return fileName;
+        }
+
+        public async Task DeleteFileAsync(string filename)
+        {
+
+            string filepath = Path.Combine(_externalFolderPath, filename);
+
+            if (!File.Exists(filepath))
+            {
+                throw new FileNotFoundException("File not found.", filepath);
+            }
+
+       
+            await Task.Run(() => File.Delete(filepath));
         }
     }
 }

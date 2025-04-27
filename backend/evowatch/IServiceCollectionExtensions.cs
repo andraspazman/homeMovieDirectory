@@ -34,6 +34,7 @@ namespace evoWatch
             services.AddScoped<ICharacterService, CharacterService>();
             services.AddScoped<IProductionCompanyService, ProductionCompanyService>();
             services.AddScoped<IPlaylistService, PlaylistService>();
+            services.AddHttpClient<IImdbRatingService, ImdbRatingService>();
 
             return services;
         }

@@ -1,37 +1,7 @@
 import { FunctionComponent, useState, useEffect, useRef } from "react";
-import {
-  Box,
-  Flex,
-  IconButton,
-  Input,
-  InputGroup,
-  InputRightElement,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverArrow,
-  PopoverBody,
-  Spinner,
-  Text,
-  Button,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  Divider,
-  Avatar,
-  Spacer,
-  useDisclosure,
-} from "@chakra-ui/react";
+import {Box,Flex,IconButton,Input,InputGroup,InputRightElement,Popover,PopoverTrigger,PopoverContent,PopoverArrow,PopoverBody,Spinner,Text,Button,Menu,MenuButton,MenuList,MenuItem,Divider,Avatar, Spacer,useDisclosure,} from "@chakra-ui/react";
 import { HamburgerIcon, SearchIcon } from "@chakra-ui/icons";
-import {
-  CircleUserRound,
-  Clapperboard,
-  LogOut,
-  Settings,
-  UserCog,
-  BarChart2,
-} from "lucide-react";
+import {CircleUserRound,Clapperboard,LogOut,Settings,UserCog,BarChart2,} from "lucide-react";
 import axios from "axios";
 import { useUser, useIsAdmin } from "../../context/UserContext";
 import styles from "./NavBar.module.scss";
@@ -84,6 +54,7 @@ const NavBar: FunctionComponent<NavBarProps> = ({
 
   const handleLogout = async () => {
     try {
+      navigate("/");
       await logout();
     } catch (error) {
       console.error("Logout error:", error);
@@ -102,7 +73,7 @@ const NavBar: FunctionComponent<NavBarProps> = ({
             onClick={toggleSidebar}
             aria-label="Toggle Sidebar"
           />
-          <Text fontWeight="bold" fontSize="lg">
+          <Text fontWeight="bold" fontSize="lg" onClick={() => navigate("/")}>
             homeFlix
           </Text>
         </Flex>
@@ -154,7 +125,7 @@ const NavBar: FunctionComponent<NavBarProps> = ({
                       borderBottom="1px solid #ccc"
                       cursor="pointer"
                       _hover={{ bg: "gray.100" }}
-                      color="red"
+                      color="black"
                       tabIndex={-1}
                       onClick={() => {
                         console.log("Selected:", result);

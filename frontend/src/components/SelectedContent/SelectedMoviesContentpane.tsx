@@ -18,6 +18,7 @@ import {
   ModalFooter,
   useDisclosure,
   useToast,
+  Stack,
 } from "@chakra-ui/react";
 import { useUser } from "../../context/UserContext";
 import ProductionCompany from "../SelectedContent/ProductionCompany";
@@ -28,16 +29,11 @@ import EditProductionCompanyModal from "../SelectedContentEditForms/EditProducti
 import AddProductionCompanyModal from "../AddContentForms/AddProductionCompanyForm";
 import styles from "./SelectedContentpane.module.scss";
 import { ProductionCompanyDTO } from "../../types/ProductionCompanyDTO";
-
-import { AddCharacterModal } from "../../components/AddContent/AddCharaterModal";
-import { AddPersonModal } from "../AddContent/AddPersonForm";
-import { EditMovieModal } from "../../components/SelectedContentForms/EditMovieModal";
-
 import { AddCharacterModal } from "../AddContentForms/AddCharaterModal";
 import { AddPersonModal } from "../AddContentForms/AddPersonForm";
 import { EditMovieModal } from "../SelectedContentEditForms/EditMovieModal"; // Új import az edit movie modalhoz
 
-import { FilePenLine } from "lucide-react";
+import { FilePenLine, Star } from "lucide-react";
 
 const SelectedMovieContentPane = () => {
   const { id } = useParams<{ id: string }>();
@@ -138,6 +134,19 @@ const SelectedMovieContentPane = () => {
       duration: 2000,
       isClosable: true,
     });
+  };
+
+  const handleWatchNow = () => {
+    if (isLoggedIn) {
+      onOpen();
+    } else {
+      toast({
+        title: "Login or register to watch",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   // Function to add the current movie to the user's playlist.
@@ -315,20 +324,24 @@ const SelectedMovieContentPane = () => {
             src={`https://localhost:7204/images/${movie.coverImagePath}`}
             alt={movie.title}
             className={styles.coverImage}
+            mt="5%"
           />
-          <Button colorScheme="blue" onClick={onOpen} mt={2}>
-            Watch now
+          <Stack spacing={2} mt={2}>
+          <Button colorScheme="blue" onClick={handleWatchNow} ml={"5%"} width={"60%"}>
+                Watch now
           </Button>
-          {/* Add to Playlist button */}
-          {isLoggedIn && (
-            <Button colorScheme="green" onClick={handleAddToPlaylist} mt={2}>
-              Add to Playlist
-            </Button>
-          )}
+            {isLoggedIn && (
+              <Button colorScheme="green" onClick={handleAddToPlaylist} ml={"5%"} width={"60%"}>
+                Add to Playlist
+              </Button>
+            )}
+          </Stack>
         </Box>
-
         {/* Right Side: Movie Details */}
         <Box className={styles.detailsContainer}>
+        <Flex align="center" ml="75%"  ><Text size="xl"  p="1%">{movie.imdbRating}</Text>
+              <Star size={20} color="#e0d910" strokeWidth={3} style={{ marginLeft: "0.5rem" }} /><Text as="strong" ml="0.5rem">/10</Text>
+              </Flex>
           <Flex alignItems="center" mb={3}>
             <Heading size="xl">{movie.title}</Heading>
             {isLoggedIn && (
@@ -336,12 +349,14 @@ const SelectedMovieContentPane = () => {
                 <FilePenLine />
               </Button>
             )}
+              
           </Flex>
           {movie.releaseYear && <Text><strong>Year:</strong> {movie.releaseYear}</Text>}
+          
           <Text><strong>Genre:</strong> {movie.genre}</Text>
           <Text><strong>Language:</strong> {movie.language}</Text>
           {movie.award && <Text><strong>Award:</strong> {movie.award}</Text>}
-          <Text mt={2}><strong>Description:</strong> {movie.description}</Text>
+          <Text mt={2} textAlign="justify"><strong>Description:</strong> {movie.description}</Text>
           
           {/* Production Company and other components */}
           <Flex direction="row" mt={4} gap={4}>
@@ -356,7 +371,7 @@ const SelectedMovieContentPane = () => {
             </Box>
           </Flex>
         </Box>
-        <Box flex="1">
+        <Box flex="1" ml={"5%"}>
           <DirectorsAndCharacters
             directors={directors}
             characters={persons.filter((pwc) => pwc.person?.role !== "director")}

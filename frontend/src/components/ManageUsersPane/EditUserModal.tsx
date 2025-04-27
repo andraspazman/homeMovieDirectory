@@ -20,7 +20,7 @@ interface User {
   normalName: string;
   email: string;
   isActive: boolean;
-  role: string;
+  role: "Admin" | "User";
   imageId?: string | null;
 }
 

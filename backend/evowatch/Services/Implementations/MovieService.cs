@@ -16,25 +16,31 @@ namespace evoWatch.Services.Implementations
         private readonly IFileSystemService _fileService;
         private readonly IWebHostEnvironment _env;
         private readonly IVideoStorageService _videoStorageService;
+        private readonly IImdbRatingService _imdbRatingService;
 
         public MovieService(
             IEpisodesRepository episodesRepository,
             IFileSystemService fileService,
             IWebHostEnvironment env,
             IConfiguration configuration,
-            IVideoStorageService videoStorageService)
+            IVideoStorageService videoStorageService,
+            IImdbRatingService imdbRatingService)
         {
             _episodesRepository = episodesRepository;
             _fileService = fileService;
             _env = env;
             _videoStorageService = videoStorageService;
+            _imdbRatingService = imdbRatingService;
         }
 
         public async Task<MovieDTO> GetMovieByIdAsync(Guid id)
         {
             var movie = await _episodesRepository.GetEpisodeByIdAsync(id);
-            if (movie == null || !movie.IsMovie) throw new MovieNotFoundException();
-            return MovieDTO.CreateFromEpisodeDocument(movie);
+            if(movie == null) throw new MovieNotFoundException();
+            
+            var movieDto = MovieDTO.CreateFromEpisodeDocument(movie);
+            movieDto.ImdbRating = await _imdbRatingService.GetImdbRatingAsync(movieDto.Title);
+            return movieDto;
         }
 
         public async Task<IEnumerable<MovieDTO>> GetMoviesAsync()
@@ -100,10 +106,27 @@ namespace evoWatch.Services.Implementations
             existingMovie.Language = !string.IsNullOrEmpty(movieDto.Language) ? movieDto.Language : existingMovie.Language;
             existingMovie.Award = !string.IsNullOrEmpty(movieDto.Award) ? movieDto.Award : existingMovie.Award;
 
-            existingMovie.CoverImagePath = (newCoverImage?.Length > 0) ? await _fileService.SaveFileAsync(newCoverImage) : existingMovie.CoverImagePath;
+            // Ha új borítókép érkezik, töröljük a régi képet, majd elmentjük az újat.
+            if (newCoverImage?.Length > 0)
+            {
+                if (!string.IsNullOrEmpty(existingMovie.CoverImagePath))
+                {
+                    // Töröljük a régi képet
+                    await _fileService.DeleteFileAsync(existingMovie.CoverImagePath);
+                }
+                existingMovie.CoverImagePath = await _fileService.SaveFileAsync(newCoverImage);
+            }
 
-           
-            existingMovie.VideoPath = (newVideoFile?.Length > 0)  ? await _videoStorageService.SaveVideoAsync(newVideoFile) : existingMovie.VideoPath;
+            // Ha új videó érkezik, töröljük a régi videót, majd elmentjük az újat.
+            if (newVideoFile?.Length > 0)
+            {
+                if (!string.IsNullOrEmpty(existingMovie.VideoPath))
+                {
+                    // Töröljük a régi videót
+                    await _videoStorageService.DeleteVideoAsync(existingMovie.VideoPath);
+                }
+                existingMovie.VideoPath = await _videoStorageService.SaveVideoAsync(newVideoFile);
+            }
 
             var result = await _episodesRepository.UpdateEpisodeAsync(existingMovie);
             return MovieDTO.CreateFromEpisodeDocument(result);
@@ -116,5 +139,6 @@ namespace evoWatch.Services.Implementations
             if (existingMovie == null || !existingMovie.IsMovie) throw new MovieNotFoundException();
             return await _episodesRepository.DeleteEpisodeAsync(existingMovie);
         }
+
     }
 }

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace evoWatch.Database.Repositories.Implementations
 {
-    internal class SeriesRepository : ISeriesRepository
+    public class SeriesRepository : ISeriesRepository
     {
         private readonly DatabaseContext _databaseContext;
 
